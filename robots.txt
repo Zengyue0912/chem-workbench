@@ -1,0 +1,7 @@
+# 高中化学 3D 考点工作台 — robots.txt（工作流 3）
+# 注意：sitemap 地址使用 Netlify 占位域名，上线自定义域名后请同步替换。
+User-agent: *
+Allow: /
+Disallow: /netlify/functions/
+
+Sitemap: https://playful-salamander-f0038b.netlify.app/sitemap.xml

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>高中化学 3D 考点工作台</title>
+<link rel="stylesheet" href="css/student-study.min.css?v=w1-1">
+<link rel="stylesheet" href="css/inline-head.min.css?v=w1-1">
+<!-- 工作流 4（B 组）：布局截断修复 + 对比度 + 左侧导航（覆盖层，在 inline-head 之后、enhance 之前） -->
+<link rel="stylesheet" href="css/workbench-layout.min.css?v=w4-1">
+<!-- 工作流 2：商业化外壳样式（付费墙 / 账号 / 引导 / AI 设置） -->
+<link rel="stylesheet" href="css/commerce.min.css?v=w2-1">
+<!-- 工作流 3：视觉升级 + 移动端适配（覆盖层，须在 inline-head 与 commerce 之后加载） -->
+<link rel="stylesheet" href="css/enhance.min.css?v=w3-1">
+<link rel="stylesheet" href="css/mobile.min.css?v=w3-1">
+<!-- 工作流 4（C 组）：测验重做 + 控件反馈 + 搜索联动（须在 mobile 之后加载） -->
+<link rel="stylesheet" href="css/workbench-quiz.min.css?v=w4-1">
+<link rel="stylesheet" href="css/workbench-controls.min.css?v=w4-1">
+<!-- 工作流 4（D 组）：学习科学新模块（闪卡 / 苏格拉底助教 / 游戏化 / 概念图谱） -->
+<link rel="stylesheet" href="css/workbench-learn.min.css?v=w4-1">
+<!-- 工作流 4（A 组）：视觉动效 + 3D 预览 + 考点动画覆盖层（须在 enhance/mobile 之后加载） -->
+<link rel="stylesheet" href="css/workbench-fx.min.css?v=w4-1">
+<!-- v2.2.0 AI 解题：分步解题面板样式（覆盖层，须在 fx 之后加载） -->
+<link rel="stylesheet" href="css/workbench-solve.min.css?v=w5-1">
+<!-- 工作流 3：PWA -->
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#0e6b57">
+<link rel="apple-touch-icon" href="/assets/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<!-- 工作流 3：SEO -->
+<meta name="description" content="高中化学 3D 考点工作台：3D 化学实验工作室、考点导航、元素周期表、分子与晶体 3D 演示、高考真题、解题 SOP 与错题本，帮你高效备考。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="高中化学 3D 考点工作台">
+<meta property="og:title" content="高中化学 3D 考点工作台">
+<meta property="og:description" content="3D 化学实验、考点导航、高考真题与解题 SOP，一站式高中化学备考工作台。">
+<meta property="og:url" content="https://playful-salamander-f0038b.netlify.app/app.html">
+<meta property="og:image" content="https://playful-salamander-f0038b.netlify.app/assets/icon-512.png">
+<meta property="og:locale" content="zh_CN">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="高中化学 3D 考点工作台">
+<meta name="twitter:description" content="3D 化学实验、考点导航、高考真题与解题 SOP，一站式高中化学备考工作台。">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "EducationalApplication",
+  "name": "高中化学 3D 考点工作台",
+  "applicationCategory": "EducationalApplication",
+  "operatingSystem": "Web",
+  "inLanguage": "zh-CN",
+  "url": "https://playful-salamander-f0038b.netlify.app/app.html",
+  "description": "高中化学 3D 考点工作台：3D 化学实验工作室、考点导航、元素周期表、分子与晶体 3D 演示、高考真题、解题 SOP 与错题本。",
+  "provider": { "@type": "EducationalOrganization", "name": "江西师范大学" }
+}
+</script>
+<!-- chem-lesson-sop-v1 -->
+<!-- chem-share-public-20261104 -->
+<!-- chem-learning-cloud-trial-20261105 -->
+</head>
+<body class="mode-auto" data-palette="teal" data-theme="light">
+<div id="chemSkeleton" aria-hidden="true">
+  <div class="sk-topbar"><span class="sk-brand"></span><span class="sk-search"></span></div>
+  <div class="sk-body">
+    <div class="sk-nav"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="sk-main"><div class="sk-hero"></div><div class="sk-row"><i></i><i></i><i></i></div><div class="sk-row"><i></i><i></i></div></div>
+  </div>
+</div>
+
+
+
+<div class="app">
+  <!-- ===== 顶栏 ===== -->
+  <header class="topbar">
+    <button class="iconbtn only-mobile" id="btnMenu" aria-label="打开导航菜单">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+    </button>
+    <div class="brand university-brand" title="返回工作台主页">
+      <img class="university-nav-seal" src="assets/jxnu-emblem.jpg" alt="江西师范大学校徽" width="36" height="36">
+      <div class="university-brand-copy"><strong>江西师范大学</strong><span>高中化学 3D 考点工作台</span></div>
+    </div>
+    <button class="iconbtn text pt-entry" id="btnPT" title="打开元素周期表" aria-label="打开元素周期表">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 10v10M15 10v10"/></svg>
+      <span>元素周期表</span>
+    </button>
+    <div class="searchbox">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m21 21-4-4"/></svg>
+      <input id="searchInput" type="text" placeholder="搜索试剂 / 仪器 / 分子 / 实验…" autocomplete="off" aria-label="全局搜索">
+      <div class="search-drop" id="searchDrop"></div>
+    </div>
+    <div class="top-acts"><button class="iconbtn text" id="btnAssistant" aria-controls="chemAssistant" aria-expanded="false">✦ <span>化学助教</span></button>
+      <button class="iconbtn" id="btnTheme" aria-label="切换深浅主题" title="切换深浅主题">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"/></svg>
+      </button>
+      <!-- 工作流 3：分享按钮（零内联脚本，行为由 js/share.js 委托绑定） -->
+      <button type="button" class="chem-share-btn" data-share="copy" aria-label="复制工作台链接">复制链接</button>
+      <button type="button" class="chem-share-btn chem-share-primary" data-share="checkin" aria-label="生成学习打卡卡片">打卡卡片</button>
+    </div>
+  </header>
+
+  <div class="layout">
+    <!-- ===== 左侧导航 ===== -->
+    <nav class="sidebar" id="sidebar" aria-label="主导航">
+      <div id="navTree"></div>
+    </nav>
+
+    <!-- ===== 主区 ===== -->
+    <main class="main">
+      <!-- 3D 舞台视图 -->
+      <div class="stage" id="viewStage">
+        <div class="stage-head">
+          <div class="crumb" id="crumb"></div>
+        </div>
+        <div class="viewport" id="viewport">
+          <canvas id="cv" role="img" aria-label="3D 模型交互视图，可拖拽旋转、滚轮缩放"></canvas>
+          <div class="hud-hint" id="hudHint">拖拽旋转 · 滚轮缩放 · 双击复位</div>
+          <div class="toolbar" id="toolbar"></div>
+          <div class="exp-panel" id="expPanel"></div>
+        </div>
+        <button class="insp-toggle" id="inspToggle" aria-label="展开详情面板">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+        </button>
+        <aside class="inspector" id="inspector" aria-label="对象详情面板"></aside>
+      </div>
+
+      <!-- 文档视图（工作台 / 蓝图） -->
+      <div class="docview" id="viewDoc"><div class="doc-wrap" id="docBody"></div></div>
+      <!-- 元素周期表（Elementum 式全屏视图） -->
+      <div class="ptview hide" id="viewPT">
+        <div class="pt-head">
+          <div class="pt-tabs">
+            <button class="pt-tab on" data-pttab="pt">元素周期表</button>
+            <button class="pt-tab" data-pttab="mol">分子</button>
+          </div>
+          <div class="pt-q"><input id="ptQ" type="search" placeholder="搜索元素：符号 / 中文名 / 英文名 / 原子序数" autocomplete="off"></div>
+          <button class="pt-mini" id="ptFull">全屏</button>
+          <button class="pt-mini" id="ptAcc">主题</button>
+          <button class="pt-mini" id="ptLang">中 / EN</button>
+          <button class="pt-mini" id="ptHall">3D 大厅</button>
+        </div>
+        <div class="pt-bars">
+          <div class="pt-row"><span class="pt-lb" id="ptLbCat">类别</span><div class="pt-chips" id="ptCats"></div></div>
+          <div class="pt-row"><span class="pt-lb" id="ptLbMode">着色</span><div class="pt-chips" id="ptModes"></div></div>
+        </div>
+        <div class="pt-scroll"><div class="pt-inner"><div class="pt-grid" id="ptGrid"></div></div></div>
+        <div class="pt-foot" id="ptFoot"></div>
+      </div>
+      <!-- 元素详情弹层 -->
+      <div class="ptmask" id="ptMask"><div class="ptdlg" id="ptDlg"></div></div>
+
+    </main>
+  </div>
+</div>
+
+<div class="mask" id="mask"></div>
+<div class="quiz-mask" id="quizMask" role="dialog" aria-modal="true" aria-label="课后练习答题"><div class="quiz-dialog" id="quizDialog"></div></div>
+<div class="quiz-mask" id="cmpMask" role="dialog" aria-modal="true" aria-label="选择对比分子"><div class="quiz-dialog" id="cmpDialog"></div></div>
+<div class="quiz-mask" id="rptMask" role="dialog" aria-modal="true" aria-label="实验报告"><div class="quiz-dialog" id="rptDialog"></div></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<!-- 首屏核心脚本（defer，按依赖顺序执行；SOP/真题/3D 空间等由 js/loader.js 按需懒加载） -->
+<!-- 工作流 2：auth.js 必须排在 loader.js 之前——它在执行时同步完成账号命名空间换入， -->
+<!-- 保证后续工作台脚本读到的 localStorage 已是当前账号的数据。 -->
+<script defer src="js/auth.min.js?v=w2-2"></script>
+<script defer src="js/loader.min.js?v=w1-1"></script>
+<script defer src="js/inline-00-e3-engine.min.js?v=w1-1"></script>
+<script defer src="js/inline-01-db-items.min.js?v=w1-1"></script>
+<script defer src="js/inline-02-db-app.min.js?v=w1-1"></script>
+<script defer src="js/inline-03-db-elem.min.js?v=w1-1"></script>
+<script defer src="js/inline-04-db-exps.min.js?v=w1-1"></script>
+<script defer src="js/inline-08-ui.min.js?v=w1-1"></script>
+<script defer src="js/inline-09-studio.min.js?v=w1-1"></script>
+<script defer src="js/student-study-stub.min.js?v=w1-1"></script>
+<!-- 工作流 4（B 组）：左侧导航折叠/滚动/掌握状态 + 滚动提示 + 原子轨道对比度 -->
+<script defer src="js/workbench-nav.min.js?v=w4-1"></script>
+<!-- v2.2.0 AI 解题基础设施（无依赖，须在 flow 之前；ocr 须在首次 ChemLazy.load('study') 之前加载以拦截原 OCR 模块，defer 脚本均在用户交互前执行完毕） -->
+<script defer src="js/workbench-solve-engine.min.js?v=w5-1"></script>
+<script defer src="js/workbench-chem-render.min.js?v=w5-1"></script>
+<script defer src="js/workbench-solve-ocr.min.js?v=w5-1"></script>
+<!-- 工作流 2：商业化外壳（定价门控 → AI 配置 → 新手引导；顺序有依赖：ai-config 包装 plan 包装过的 Tutor.send） -->
+<script defer src="js/plan.min.js?v=w2-2"></script>
+<script defer src="js/ai-config.min.js?v=w2-1"></script>
+<script defer src="js/onboarding.min.js?v=w2-1"></script>
+<!-- 工作流 4（D 组）：学习科学新模块（须在 ai-config 之后：socratic 包装 ai-config 包装过的 Tutor.local） -->
+<script defer src="js/workbench-flashcards.min.js?v=w4-1"></script>
+<script defer src="js/workbench-socratic.min.js?v=w4-1"></script>
+<script defer src="js/workbench-gamify.min.js?v=w4-1"></script>
+<script defer src="js/workbench-conceptmap.min.js?v=w4-1"></script>
+<!-- v2.2.0 AI 解题：分步交互解题 + 错因诊断 + 变式训练（须在 socratic 之后：复用 ChemSocratic.format；须在 engine/ocr/render 之后） -->
+<script defer src="js/workbench-solve-flow.min.js?v=w5-1"></script>
+<!-- 工作流 3：体验、移动端与增长（defer，按顺序执行；全部为运行时挂载，不改 W1/W2 逻辑；analytics 在最前供 pwa/share 复用） -->
+<script defer src="js/analytics.min.js?v=w3-1"></script>
+<script defer src="js/mobile.min.js?v=w3-1"></script>
+<script defer src="js/a11y.min.js?v=w3-1"></script>
+<script defer src="js/share.min.js?v=w3-1"></script>
+<script defer src="js/pwa.min.js?v=w3-1"></script>
+<!-- 工作流 4（C 组）：测验增强 + 搜索联动（运行时挂载，不改原逻辑） -->
+<script defer src="js/workbench-quiz.min.js?v=w4-1"></script>
+<script defer src="js/workbench-search.min.js?v=w4-1"></script>
+<!-- 工作流 4（A 组）：3D 预览交互 + 考点分步动画（运行时挂载，不改 W1–W3 逻辑） -->
+<script defer src="js/workbench-3d-preview.min.js?v=w4-1"></script>
+<script defer src="js/workbench-vibe.min.js?v=w4-1"></script>
+</body>
+</html>

@@ -1,0 +1,417 @@
+/* ============================================================================
+ * 高中化学 3D 考点工作台 — 分步交互解题 + 错因诊断 + 变式训练（v2.2.0 / B 组）
+ * 配套脚本：js/workbench-solve-flow.js。面板复用站内 .quiz-mask / .quiz-dialog，
+ * 本文件只补 wbs-* 专属样式。配色全部取站内 CSS 变量，深色模式自动跟随。
+ * ========================================================================== */
+
+/* ---------- 面板与头部 ---------- */
+.wbs-dialog {
+  width: min(860px, 100%);
+  max-height: 92vh;
+}
+.wbs-head {
+  position: sticky;
+  top: -20px;
+  z-index: 2;
+  background: var(--card);
+  padding-top: 4px;
+  padding-bottom: 8px;
+}
+.wbs-head h3 {
+  flex: 1;
+}
+.wbs-x {
+  min-width: 44px;
+  min-height: 44px;
+  font-size: 20px;
+  line-height: 1;
+  padding: 0;
+  flex: none;
+}
+.wbs-badge {
+  flex: none;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+.wbs-badge-engine { background: var(--ok-bg); color: var(--ok-tx); }
+.wbs-badge-sop { background: var(--info-bg); color: var(--info-tx); }
+.wbs-badge-tutor { background: var(--warn-bg); color: var(--warn-tx); }
+.wbs-badge-none { background: var(--danger-bg); color: var(--danger); }
+
+/* ---------- 通用块 ---------- */
+.wbs-q {
+  font-size: 14px;
+  line-height: 1.7;
+  color: var(--text);
+  margin: 4px 0 10px;
+  word-break: break-word;
+}
+.wbs-note {
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--text2);
+  background: var(--accent-light);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin: 8px 0;
+}
+.wbs-warn {
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: var(--warn-tx);
+  background: var(--warn-bg);
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin: 8px 0;
+}
+.wbs-ok {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ok-tx);
+  background: var(--ok-bg);
+  border-radius: 10px;
+  padding: 9px 12px;
+  margin: 8px 0;
+}
+.wbs-label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 10px 0;
+}
+.wbs-label textarea,
+.wbs-variant-row input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.6;
+  outline: none;
+}
+.wbs-label textarea:focus,
+.wbs-variant-row input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-light);
+}
+/* 触控目标 >= 44px（移动端可用）。 */
+.wbs-btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  font-size: 13.5px;
+}
+.wbs-btn-sm {
+  min-height: 36px;
+  padding: 6px 12px;
+  font-size: 12.5px;
+}
+
+/* ---------- 步骤卡片 ---------- */
+.wbs-step {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  margin: 10px 0;
+  background: var(--card);
+  overflow: hidden;
+}
+.wbs-step.is-done {
+  border-color: var(--ok-tx);
+}
+.wbs-step.is-confused {
+  border-color: var(--warn-tx);
+}
+.wbs-step0 {
+  background: var(--accent-light);
+}
+.wbs-step-head {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border: 0;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.wbs-step-head-static {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+}
+.wbs-step-no {
+  flex: none;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--primary);
+  background: var(--primary-light);
+  border-radius: 20px;
+  padding: 3px 9px;
+  white-space: nowrap;
+}
+.wbs-step-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+.wbs-step-state {
+  flex: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text2);
+  white-space: nowrap;
+}
+.wbs-step-body {
+  padding: 2px 14px 14px;
+}
+.wbs-step-detail {
+  font-size: 14px;
+  line-height: 1.8;
+  color: var(--text);
+  margin: 6px 0 10px;
+  white-space: pre-line;
+  word-break: break-word;
+}
+.wbs-review {
+  margin: 4px 0 8px;
+}
+.wbs-review dt {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--primary);
+  margin-top: 8px;
+}
+.wbs-review dd {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text);
+  margin: 2px 0 0;
+  word-break: break-word;
+}
+.wbs-links {
+  margin-top: 10px;
+}
+.wbs-why,
+.wbs-hint {
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 10px 0;
+  white-space: pre-line;
+  word-break: break-word;
+}
+.wbs-why {
+  background: var(--info-bg);
+}
+.wbs-hint {
+  background: var(--warn-bg);
+}
+.wbs-hint ol {
+  margin: 6px 0 6px 18px;
+  padding: 0;
+}
+.wbs-hint li {
+  margin: 4px 0;
+}
+.wbs-hint p,
+.wbs-why p {
+  margin: 6px 0;
+}
+.wbs-think {
+  display: block;
+  margin-top: 8px;
+  color: var(--text2);
+}
+.wbs-feedback {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 10px 0 2px;
+}
+.wbs-progress {
+  font-size: 12px;
+  color: var(--text2);
+  margin: 10px 0 4px;
+}
+.wbs-nav,
+.wbs-foot {
+  margin: 10px 0 4px;
+}
+
+/* ---------- 变式训练 ---------- */
+.wbs-complete {
+  border-top: 1px dashed var(--border);
+  margin-top: 16px;
+  padding-top: 12px;
+}
+.wbs-complete h4 {
+  font-size: 15px;
+  color: var(--primary);
+  margin: 0 0 8px;
+}
+.wbs-variant {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  background: var(--bg);
+}
+.wbs-variant-q {
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: var(--text);
+  margin: 0 0 10px;
+  word-break: break-word;
+}
+.wbs-variant-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+.wbs-variant-row input {
+  flex: 1 1 200px;
+  min-height: 44px;
+  background: var(--card);
+}
+.wbs-variant-result {
+  font-size: 13px;
+  line-height: 1.7;
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin: 10px 0 0;
+}
+.wbs-variant-result.ok {
+  background: var(--ok-bg);
+  color: var(--ok-tx);
+}
+.wbs-variant-result.warn {
+  background: var(--warn-bg);
+  color: var(--warn-tx);
+}
+.wbs-selfreport {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin: 10px 0;
+  background: var(--accent-light);
+}
+.wbs-selfreport p {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 8px;
+}
+
+/* ---------- 错因诊断 ---------- */
+.wbs-diag-result {
+  outline: none;
+  margin-top: 12px;
+}
+.wbs-diag-result > p:first-child {
+  font-size: 13.5px;
+  color: var(--text);
+}
+.wbs-finding {
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--danger);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 10px 0;
+  background: var(--card);
+}
+.wbs-finding h4 {
+  font-size: 13.5px;
+  color: var(--danger);
+  margin: 0 0 6px;
+}
+.wbs-finding p {
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+  margin: 4px 0;
+  word-break: break-word;
+}
+.wbs-ref {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 12px 0 4px;
+  background: var(--bg);
+}
+.wbs-ref summary {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  cursor: pointer;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.wbs-ref p {
+  font-size: 12.5px;
+  line-height: 1.8;
+  color: var(--text2);
+  margin: 8px 0;
+  word-break: break-word;
+}
+
+/* ---------- 助教抽屉入口 ---------- */
+.wbs-drawer-btn {
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+/* ---------- 移动端：面板全屏 ---------- */
+@media (max-width: 560px) {
+  .wbs-mask {
+    padding: 0;
+  }
+  .wbs-dialog {
+    width: 100%;
+    height: 100dvh;
+    max-height: none;
+    border-radius: 0;
+    padding: 14px 12px 16px;
+  }
+  .wbs-head {
+    top: -14px;
+  }
+  .wbs-variant-row {
+    flex-direction: column;
+  }
+  .wbs-variant-row .wbs-btn {
+    width: 100%;
+  }
+}
+
+/* ---------- 减少动态效果 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .wbs-mask,
+  .wbs-mask * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

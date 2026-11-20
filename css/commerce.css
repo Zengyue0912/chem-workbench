@@ -1,0 +1,84 @@
+/* ============================================================================
+ * 高中化学 3D 考点工作台 — 商业化外壳样式（工作流 2）
+ * 用于 app.html：付费墙 / 账号登录与菜单 / 新手引导 / AI 设置面板。
+ * 复用工作台已有的 CSS 变量（--primary / --accent / --bg / --card /
+ * --text / --text2 / --border / --shadow，含 [data-theme="dark"] 深色值）
+ * 与 .btn-main / .btn-sub 按钮样式；本文件只补充 chem2- 前缀的新样式。
+ * ========================================================================== */
+
+/* ---------- 通用遮罩与弹窗 ---------- */
+.chem2-mask{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
+  background:rgba(0,20,15,.48);padding:18px;overflow-y:auto}
+.chem2-box{position:relative;background:var(--card);color:var(--text);
+  border:1px solid var(--border);border-radius:15px;padding:22px 22px 18px;
+  width:min(480px,100%);max-height:92vh;overflow:auto;box-shadow:var(--shadow-lg,0 18px 50px rgba(0,0,0,.25))}
+.chem2-x{position:absolute;top:10px;right:12px;border:none;background:none;
+  color:var(--text2);font-size:22px;line-height:1;cursor:pointer;padding:4px 6px}
+.chem2-x:hover{color:var(--text)}
+.chem2-title{font-size:18px;margin:0 0 10px;padding-right:28px}
+.chem2-note{font-size:12.5px;line-height:1.7;color:var(--text2);margin:8px 0}
+.chem2-error{font-size:12.5px;color:#c2410c;min-height:1.2em;margin:6px 0}
+.chem2-status{font-size:12.5px;line-height:1.6;color:var(--text2);min-height:1.2em;margin:8px 0}
+.chem2-form{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.chem2-field{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--text)}
+.chem2-field input,.chem2-field select{width:100%;padding:9px 10px;
+  border:1px solid var(--border);border-radius:8px;background:var(--bg);
+  color:var(--text);font:inherit;box-sizing:border-box}
+.chem2-field input:focus,.chem2-field select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.chem2-submit{margin-top:4px}
+.chem2-box .btn-sub{margin-top:8px}
+
+/* ---------- 付费墙 ---------- */
+.chem2-paywall-badge{display:inline-block;background:linear-gradient(135deg,#0e6b57,#14b8a6);
+  color:#fff;font-size:12px;font-weight:700;border-radius:999px;padding:3px 12px;margin-bottom:10px}
+.chem2-price{font-size:15px;font-weight:700;color:var(--primary);margin:10px 0 4px}
+.chem2-feature-list{list-style:none;margin:8px 0 10px;padding:0;font-size:13px;line-height:1.9;color:var(--text)}
+.chem2-demo-note{background:var(--bg-deep,var(--bg));border:1px dashed var(--border);
+  border-radius:8px;padding:8px 10px}
+.chem2-paywall-cta{width:100%;margin-top:10px}
+.chem2-paywall-link{display:block;text-align:center;margin-top:8px;text-decoration:none}
+.chem2-paywall-box .btn-sub{width:100%}
+
+/* ---------- 顶栏账号按钮与菜单 ---------- */
+.chem2-auth-btn{display:inline-flex;align-items:center;gap:6px;max-width:220px}
+.chem2-auth-name{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chem2-plan-badge{display:inline-block;font-size:11px;font-weight:700;line-height:1;
+  color:var(--primary);background:var(--accent-bg,#e2f4ee);border:1px solid var(--border);
+  border-radius:999px;padding:4px 8px;white-space:nowrap}
+.chem2-menu{position:absolute;z-index:210;min-width:230px;background:var(--card);
+  border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg,0 18px 50px rgba(0,0,0,.25));
+  padding:10px;color:var(--text)}
+.chem2-menu-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  font-size:14px;padding:4px 6px 8px;border-bottom:1px solid var(--border)}
+.chem2-menu-note{font-size:11.5px;color:var(--text2);margin:8px 6px 6px}
+.chem2-menu-item{display:block;width:100%;text-align:left;border:none;background:none;
+  color:var(--text);font-size:13px;padding:9px 10px;border-radius:8px;cursor:pointer}
+.chem2-menu-item:hover{background:var(--bg-deep,var(--bg))}
+
+/* ---------- 新手引导 ---------- */
+.chem2-ob-mask{position:fixed;inset:0;z-index:300;background:rgba(4,32,26,.55)}
+.chem2-ob-ring{position:fixed;z-index:301;border:3px solid var(--accent,#14b8a6);
+  border-radius:12px;box-shadow:0 0 0 4px rgba(20,184,166,.25),0 0 24px rgba(20,184,166,.45);
+  pointer-events:none;transition:top .25s,left .25s,width .25s,height .25s}
+.chem2-ob-card{position:fixed;z-index:302;width:min(360px,calc(100vw - 24px));
+  background:var(--card);color:var(--text);border:1px solid var(--border);
+  border-radius:14px;padding:18px 20px;box-shadow:var(--shadow-lg,0 18px 50px rgba(0,0,0,.3))}
+.chem2-ob-card.chem2-ob-center{top:50%!important;left:50%!important;transform:translate(-50%,-50%)}
+.chem2-ob-dots{display:flex;gap:6px;margin-bottom:10px}
+.chem2-ob-dot{width:22px;height:5px;border-radius:999px;background:var(--border)}
+.chem2-ob-dot.on{background:var(--accent)}
+.chem2-ob-title{font-size:16px;margin:0 0 8px}
+.chem2-ob-text{font-size:13px;line-height:1.75;color:var(--text2);margin:0 0 14px}
+.chem2-ob-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+
+/* ---------- AI 设置面板 ---------- */
+.chem2-ai-box{width:min(520px,100%)}
+.chem2-ai-box .btn-sub{width:100%}
+
+@media (max-width:640px){
+  .chem2-box{padding:18px 16px 14px}
+  .chem2-auth-name{max-width:64px}
+}
+@media print{
+  .chem2-mask,.chem2-menu,.chem2-ob-mask{display:none!important}
+}

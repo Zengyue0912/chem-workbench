@@ -1,0 +1,338 @@
+/* ============================================================================
+ * 高中化学 3D 考点工作台 — 测验页增强样式（工作流 4 / C 组）
+ * 配套脚本：js/workbench-quiz.js（表现层增强，不改动原有测验逻辑）。
+ *
+ * 覆盖两个测验面：
+ *   1) 课后练习 / 预习自测弹窗（#quizDialog，原渲染见 js/inline-08-ui.js
+ *      renderQuiz）：对话框由 720px 加宽到 860px；单题浏览 + 答题卡侧栏
+ *      + 顶部进度条 + 底部上一题/下一题 + 可选计时。
+ *   2) 高考真题空间单题页（.exam-page，原渲染见 js/exam-space.js）：
+ *      顶部进度条 + 第 x/N 题 + 上一题/下一题 + 计时；目录按钮标记
+ *      错题 / 已订正状态（读 exam-space 自身的 localStorage 记录）。
+ *   3) 自适应测验推荐（模块三）：答题卡下方的“为你推荐”卡片与真题空间
+ *      导航条内的推荐行（.wbq-reco / .wbq-reco-row）。
+ *
+ * 只用内联主题变量（--card/--border/--text/--accent 等），深浅主题自动适配。
+ * 本文件须在 mobile.min.css 之后加载（见 app.html 引入顺序说明）。
+ * ========================================================================== */
+
+/* ---------- 1. 弹窗加宽：720px → 860px（原值见 inline-head.css .quiz-dialog） ---------- */
+.quiz-dialog {
+  width: min(860px, 100%);
+}
+
+/* ---------- 2. 顶部进度条（吸顶，随弹窗滚动保持可见） ---------- */
+.wbq-bar {
+  position: sticky;
+  top: -20px; /* 抵消 .quiz-dialog 的上内边距，吸顶时贴住弹窗顶缘 */
+  z-index: 5;
+  margin: 10px -22px 0;
+  padding: 10px 22px 11px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.wbq-pos {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--primary);
+  white-space: nowrap;
+}
+.wbq-pos small {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text2);
+  margin-left: 6px;
+  white-space: nowrap;
+}
+.wbq-progress {
+  flex: 1 1 120px;
+  height: 6px;
+  min-width: 90px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.wbq-progress > i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width .25s ease;
+}
+.wbq-timer {
+  font-family: "Cascadia Code", Consolas, monospace;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--text2);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.wbq-timer[hidden] { display: none; }
+.wbq-mini {
+  flex: none;
+  border: 1px solid var(--border);
+  background: var(--card);
+  color: var(--text2);
+  border-radius: 99px;
+  padding: 4px 11px;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s, transform .12s;
+}
+.wbq-mini:hover { border-color: var(--accent); color: var(--primary); background: var(--accent-bg); }
+.wbq-mini:active { transform: translateY(1px); }
+.wbq-mini[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--primary);
+}
+
+/* ---------- 3. 两栏布局：题干区 + 答题卡侧栏 ---------- */
+.wbq-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 196px;
+  gap: 16px;
+  align-items: start;
+  margin-top: 14px;
+}
+.wbq-main { min-width: 0; }
+.wbq-side {
+  position: sticky;
+  top: 78px; /* 吸顶进度条下方 */
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  padding: 12px;
+}
+.wbq-card-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 9px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+.wbq-card-title small { font-size: 11px; font-weight: 600; color: var(--text2); }
+.wbq-card {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.wbq-cell {
+  min-width: 0;
+  height: 32px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color .15s, border-color .15s, color .15s, transform .12s;
+}
+.wbq-cell:hover { border-color: var(--accent); }
+.wbq-cell:active { transform: translateY(1px); }
+.wbq-cell.is-answered { border-color: var(--accent); background: rgba(20, 184, 166, .12); }
+.wbq-cell.is-current {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(14, 107, 87, .28);
+}
+.wbq-cell.is-right { border-color: #34c98e; background: rgba(52, 201, 142, .16); color: var(--text); }
+.wbq-cell.is-wrong { border-color: #e8794f; background: rgba(232, 121, 79, .16); color: var(--text); }
+.wbq-cell.is-current.is-right,
+.wbq-cell.is-current.is-wrong {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.wbq-legend {
+  margin-top: 10px;
+  font-size: 11px;
+  line-height: 1.8;
+  color: var(--text2);
+}
+.wbq-legend i {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  margin: 0 4px 0 8px;
+  vertical-align: -1px;
+  border: 1px solid var(--border);
+  background: var(--card);
+}
+.wbq-legend i.lg-done { background: rgba(20, 184, 166, .35); border-color: var(--accent); }
+.wbq-legend i.lg-right { background: rgba(52, 201, 142, .4); border-color: #34c98e; }
+.wbq-legend i.lg-wrong { background: rgba(232, 121, 79, .4); border-color: #e8794f; }
+.wbq-legend i:first-child { margin-left: 0; }
+
+/* ---------- 4. 单题模式：只显示当前一题 ---------- */
+.quiz-dialog.wbq-single .q-item { display: none; }
+.quiz-dialog.wbq-single .q-item.wbq-current { display: block; }
+/* 单题模式下题干区更舒展 */
+.quiz-dialog.wbq-single .q-item.wbq-current .q-txt { font-size: 14px; }
+.quiz-dialog.wbq-single .q-item.wbq-current .q-opt { padding: 10px 13px; font-size: 13px; }
+
+/* ---------- 5. 底部导航：上一题 / 下一题 ---------- */
+.wbq-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+}
+.wbq-nav .wbq-nav-pos {
+  font-size: 12px;
+  color: var(--text2);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.wbq-nav button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+/* 导航与原提交栏之间留出分隔 */
+.wbq-nav + .q-foot {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  margin-top: 14px;
+}
+
+/* 选项按下反馈（.q-opt 是 div[role=button]，补一个轻按压态） */
+.q-opt:active { transform: scale(.99); }
+
+/* ---------- 6. 真题空间单题页（.exam-page）导航条 ---------- */
+.wbq-exam-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin: 14px 0 4px;
+  padding: 11px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.wbq-exam-bar .wbq-nav-btns {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+.wbq-exam-bar .wbq-nav-btns button:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+/* 目录按钮状态点：答对 / 曾错已订正（绿）、答错未订正（红） */
+.exam-catalog button.wbq-done-ok,
+.exam-catalog button.wbq-done-bad { position: relative; }
+.exam-catalog button.wbq-done-ok::after,
+.exam-catalog button.wbq-done-bad::after {
+  content: "";
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+.exam-catalog button.wbq-done-ok::after { background: #34c98e; }
+.exam-catalog button.wbq-done-bad::after { background: #e8794f; }
+
+/* ---------- 7. 窄屏：侧栏收为横向答题卡，导航保持可用 ---------- */
+@media (max-width: 640px) {
+  .wbq-shell { grid-template-columns: 1fr; }
+  .wbq-side {
+    position: static;
+    order: -1; /* 答题卡移到题目前面，方便跳转 */
+  }
+  .wbq-card { grid-template-columns: repeat(8, 1fr); }
+  .wbq-cell { height: 34px; }
+  .wbq-exam-bar .wbq-nav-btns { margin-left: 0; }
+  .wbq-exam-bar .wbq-nav-btns button { flex: 1; }
+}
+@media (max-width: 560px) {
+  /* 与 inline-head.css 的 560px 断点一致：弹窗内边距变为 14px 12px */
+  .wbq-bar { top: -14px; margin-left: -12px; margin-right: -12px; padding-left: 12px; padding-right: 12px; }
+}
+@media (max-width: 400px) {
+  .wbq-card { grid-template-columns: repeat(6, 1fr); }
+}
+
+/* ---------- 8. 自适应推荐卡（模块三） ---------- */
+.wbq-reco {
+  margin-top: 12px;
+  border: 1px dashed var(--accent);
+  border-radius: 12px;
+  background: var(--accent-bg);
+  padding: 12px;
+}
+.wbq-reco-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--primary);
+}
+.wbq-reco-body {
+  font-size: 12.5px;
+  color: var(--text);
+  margin-top: 6px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+.wbq-reco-why {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 4px;
+  line-height: 1.6;
+}
+.wbq-reco .wbq-reco-go {
+  width: 100%;
+  margin-top: 9px;
+}
+/* 真题空间导航条内的推荐行：占满整行，文案与按钮左右分布 */
+.wbq-reco-row {
+  flex-basis: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 2px;
+  padding: 10px 12px;
+}
+.wbq-reco-row .wbq-reco-text {
+  font-size: 12.5px;
+  color: var(--text);
+  line-height: 1.6;
+  min-width: 0;
+}
+.wbq-reco-row .wbq-reco-text b { color: var(--primary); }
+.wbq-reco-row .wbq-reco-text small {
+  display: block;
+  font-size: 11px;
+  color: var(--text2);
+}
+.wbq-reco-row .wbq-exam-reco-go { flex: none; }
+@media (max-width: 640px) {
+  .wbq-reco-row { flex-wrap: wrap; }
+  .wbq-reco-row .wbq-exam-reco-go { width: 100%; }
+}
+
+/* ---------- 9. 减少动态效果偏好 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .wbq-progress > i,
+  .wbq-mini,
+  .wbq-cell { transition: none; }
+}

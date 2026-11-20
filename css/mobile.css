@@ -1,0 +1,198 @@
+/* ============================================================================
+ * 高中化学 3D 考点工作台 — 移动端适配覆盖层（工作流 3）
+ * 只做加法：不修改 W1 的 5 个 CSS 源码；本文件在 inline-head.css 之后加载，
+ * 同等优先级下后加载者胜出。断点：1024px（平板）/ 768px（手机）。
+ * 配套运行时逻辑见 js/mobile.js（抽屉手势、--vh 修正、双击复位）。
+ * 工作流 4 / C 组补充：修复 721–768px 抽屉无入口空隙；3D 工具条窄屏横向
+ * 滚动；周期表冻结首列 + ≤480px 紧凑模式；375px 顶栏溢出收敛。
+ * ========================================================================== */
+
+/* ---------- 通用触控优化（所有尺寸） ---------- */
+button, a, input, select, textarea, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+button, a, [role="button"] { touch-action: manipulation; }
+
+/* 移动端浏览器地址栏伸缩导致 100vh 跳动：js/mobile.js 写入 --vh 修正 */
+.app { height: 100vh; height: 100dvh; height: calc(var(--vh, 1vh) * 100); }
+
+/* 抽屉打开时锁定背景滚动（js/mobile.js 在 body 上切换 .chem-drawer-open） */
+body.chem-drawer-open { overscroll-behavior: none; }
+body.chem-drawer-open .main,
+body.chem-drawer-open .docview { overflow: hidden; }
+
+/* ---------- 平板：≤1024px ---------- */
+@media (max-width: 1024px) {
+  .layout { grid-template-columns: 208px minmax(0, 1fr); }
+  .sidebar { font-size: 13px; }
+  .topbar { gap: 9px; padding: 0 10px; }
+  .searchbox { max-width: 300px; }
+  .brand.university-brand .university-brand-copy span { font-size: 11px; }
+
+  /* 多列卡片收敛为两列 */
+  .home-shortcuts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .home-lower { grid-template-columns: 1fr; gap: 18px; }
+  .arcade-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .lf-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .lsop-step-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .doc-wrap { padding-left: 16px; padding-right: 16px; }
+
+  /* 周期表工具条允许横向滚动，不挤压按钮 */
+  .pt-head { flex-wrap: wrap; }
+  .pt-bars { overflow-x: auto; }
+}
+
+/* ---------- 手机：≤768px ---------- */
+@media (max-width: 768px) {
+  /* --- 顶栏压缩 --- */
+  .topbar { height: 52px; gap: 7px; padding: 0 8px; }
+  .brand.university-brand { gap: 7px; }
+  .brand.university-brand .university-nav-seal { width: 30px; height: 30px; }
+  .brand.university-brand .university-brand-copy strong { font-size: 13px; letter-spacing: 1px; }
+  .brand.university-brand .university-brand-copy span { display: none; }
+  .searchbox { max-width: none; flex: 1; min-width: 0; }
+  .searchbox input { height: 40px; font-size: 14px; }
+  .top-acts { gap: 4px; }
+  #btnAssistant span { display: none; }
+  #btnAssistant { padding: 0 10px; }
+
+  /* --- 侧边栏变抽屉（基础样式已在 inline-head.css 的 720px 断点定义，
+         这里把抽屉行为提前到 768px，并加滑动手势过渡） --- */
+  /* W4 修复：inline-head.css 只在 ≤720px 显示汉堡按钮（.only-mobile），
+     而本文件的抽屉从 768px 就已生效——721–768px 之间导航抽屉会处于
+     “已隐藏且无入口打开”的状态。这里把按钮显示提前到 768px，补齐空隙。 */
+  .only-mobile { display: flex !important; }
+  .layout { grid-template-columns: 1fr; position: relative; }
+  .sidebar {
+    position: fixed; top: 52px; left: 0; bottom: 0;
+    width: min(280px, 86vw);
+    transform: translateX(-102%);
+    transition: transform .26s ease;
+    z-index: 95; box-shadow: var(--shadow-lg);
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .sidebar.show { transform: translateX(0); }
+  /* 抽屉内的导航项加大触控区 */
+  .sidebar .new-nav, .sidebar button, .sidebar a {
+    min-height: 44px; display: flex; align-items: center;
+  }
+
+  /* --- 卡片与网格单列 --- */
+  .home-shortcuts, .home-lower, .arcade-grid,
+  .lf-grid, .lsop-step-grid, .chem-two { grid-template-columns: 1fr; }
+  .home-welcome { grid-template-columns: 1fr; gap: 18px; }
+  .home-sketch canvas { height: 210px; }
+
+  /* --- 触控尺寸 ≥44px（WCAG 2.2 AA 目标尺寸） --- */
+  .iconbtn { min-width: 44px; min-height: 44px; }
+  .iconbtn.text { min-height: 44px; padding: 0 12px; }
+  .pt-tab, .pt-mini { min-height: 44px; padding: 8px 12px; }
+  .pt-chips button, .pt-chips .pt-chip { min-height: 40px; }
+  .insp-toggle { min-width: 44px; min-height: 44px; }
+  .toolbar button, .toolbar .iconbtn { min-width: 44px; min-height: 44px; }
+  .home-link { min-height: 44px; }
+  .quiz-dialog button, .ptdlg button { min-height: 44px; }
+  .wb-filters button, .wb-filters input, .wb-filters select { min-height: 44px; }
+  .home-start button { min-height: 44px; }
+  .lsop-tools button, .lf-actions button { min-height: 44px; }
+
+  /* --- 3D 舞台：全宽画布，详情面板变底部抽屉 --- */
+  .stage { grid-template-columns: 1fr; }
+  .viewport { min-height: 52vh; }
+  .inspector {
+    position: absolute; right: 0; top: auto; bottom: 0; left: 0;
+    width: auto; max-height: 62vh;
+    transform: translateY(102%); transition: transform .28s ease;
+    border-left: 0; border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+  }
+  .inspector.show { transform: translateY(0); }
+  .insp-toggle { bottom: 12px; }
+  .hud-hint { font-size: 11px; padding: 6px 10px; }
+  .exp-panel { max-width: calc(100vw - 20px); }
+
+  /* --- 3D 工具条：窄屏下单行横向滚动（W4）
+         原为 flex-wrap 换行：按钮一多会在画布上方叠成两三行遮挡模型。
+         改为不换行 + 横向滚动；工具条本身绝对定位居中，内容不足时仍居中。 --- */
+  .toolbar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    justify-content: flex-start;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .toolbar::-webkit-scrollbar { display: none; }
+  .toolbar > * { flex: none; }
+
+  /* --- 弹窗贴近全屏 --- */
+  .quiz-mask { padding: 8px; }
+  .quiz-dialog, .ptdlg {
+    width: 100%; max-width: 100%;
+    max-height: calc(var(--vh, 1vh) * 100 - 16px);
+    max-height: calc(100dvh - 16px);
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+  }
+  .ptmask { padding: 8px; }
+
+  /* --- 周期表：横向滚动保留，工具条换行 --- */
+  .pt-head { gap: 6px; }
+  .pt-q { flex-basis: 100%; order: 10; }
+  .pt-q input { height: 44px; }
+  .pt-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  /* W4：冻结首列（周期号列）。renderPTGrid 生成的左侧轴线格带内联样式
+     grid-column:1;（带分号可与 10–19 列区分），横向滚动时保持可见。
+     顶部列号行不冻结（行号选择器与 10/11 行冲突，改动风险大于收益）。 */
+  .pt-grid > .pt-axis[style*="grid-column:1;"] {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background: var(--card);
+    box-shadow: 2px 0 6px rgba(0, 0, 0, .08);
+  }
+
+  /* --- 文档区内边距收紧 --- */
+  .doc-wrap { padding-left: 12px; padding-right: 12px; }
+  .wb-paper, .teach-paper, .lsop-document { padding: 18px 14px; }
+  .lesson-layout { grid-template-columns: 1fr; }
+
+  /* --- 安全区（刘海屏 / 手势条） --- */
+  .topbar { padding-top: env(safe-area-inset-top, 0); }
+  #toast { bottom: calc(20px + env(safe-area-inset-bottom, 0)); }
+  .chem-install-banner { padding-bottom: env(safe-area-inset-bottom, 0); }
+}
+
+/* ---------- 小屏手机：≤480px ---------- */
+@media (max-width: 480px) {
+  /* 顶栏只保留菜单、校徽、搜索、主题；周期表入口缩为图标 */
+  #btnPT span { display: none; }
+  #btnPT { padding: 0 10px; }
+  .brand.university-brand .university-brand-copy strong { display: none; }
+  /* W4：375px 下顶栏固定按钮（菜单 44 + 校徽 30 + 助教/主题 88 + 两个分享按钮
+     约 160 + 间距）合计超过 340px，搜索框会被压到不足 20px。分享按钮在
+     ≤480px 隐藏（≥481px 恢复显示，功能本身不受影响），让搜索框可用。 */
+  .chem-share-btn { display: none; }
+  .home-copy h1 { font-size: 26px; }
+  .wb-head h1, .arcade-head h1 { font-size: 23px; }
+  /* W4：工具条在 768px 已改为单行横向滚动，这里只收紧间距，不再改回换行 */
+  .toolbar { gap: 4px; }
+  .crumb { font-size: 12px; }
+
+  /* W4：周期表紧凑模式——最小宽度 900px → 720px，格子与间距同步收紧，
+     375px 下横向滚动距离缩短约 20%，每列仍可读（元素符号 clamp 下限 12px） */
+  .pt-inner { min-width: 720px; padding: 8px 8px 2px; }
+  .pt-grid { gap: 2px; }
+  .pt-cell { min-height: 30px; }
+}
+
+/* ---------- 横屏手机：高度受限时压缩顶栏与画布提示 ---------- */
+@media (max-height: 500px) and (orientation: landscape) {
+  .topbar { height: 46px; }
+  .sidebar { top: 46px; }
+  .hud-hint { display: none; }
+  .viewport { min-height: 0; }
+}
+
+/* ---------- 减少动态效果偏好 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .sidebar, .inspector { transition: none; }
+}

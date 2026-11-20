@@ -1,0 +1,33 @@
+# 备用头文件：与 netlify.toml 内容一致（Netlify 合并两者，冲突时以 netlify.toml 为准）。
+# 静态资源带 ?v=w1-1 版本查询串；改动资源时须同步升级版本号（见 PERF_NOTES.md）。
+
+/css/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/js/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/*.html
+  Cache-Control: no-cache
+
+/
+  Cache-Control: no-cache
+
+# 协调员：SW 与 manifest 不缓存（保证更新及时生效）
+/sw.js
+  Cache-Control: no-cache
+
+/manifest.json
+  Cache-Control: no-cache
+
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+# v2.2.0 OCR CDN 放行：script-src / worker-src / connect-src 另放行
+# https://cdn.jsdelivr.net（拍照 OCR 按需加载 tesseract.js 5.1.1 主脚本、
+# worker 与语言包；与 netlify.toml 的 CSP 保持同步）。
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src https://player.bilibili.com https://*.bilibili.com; worker-src 'self' blob: https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'
