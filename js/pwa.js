@@ -1,7 +1,7 @@
 /* ============================================================================
  * 高中化学 3D 考点工作台 — PWA：Service Worker 注册 + 安装提示（工作流 3）
  * 只做加法：独立文件，不修改 W1 的任何 JS 源码。
- * - 注册站点根目录的 /sw.js（缓存版本见 sw.js 内 CACHE_NAME）。
+ * - 注册站点根目录的 sw.js（相对路径，兼容子路径部署；缓存版本见 sw.js 内 CACHE_NAME）。
  * - 监听 beforeinstallprompt，展示自定义安装横幅（样式见 css/enhance.css）。
  * - 安装横幅关闭后 14 天内不再打扰（localStorage：chem3d_v2_pwa_dismissed）。
  * 注意：Service Worker 仅在 HTTPS（或 localhost）下可用；file:// 打开时静默跳过。
@@ -27,7 +27,7 @@
     if (!('serviceWorker' in navigator)) return;
     if (!window.isSecureContext) return; // file:// / 非 HTTPS 下不可用
     window.addEventListener('load', function () {
-      navigator.serviceWorker.register('/sw.js').then(function (reg) {
+      navigator.serviceWorker.register('sw.js').then(function (reg) {
         /* 有新版本 SW 等待激活时通知页面（由页面决定是否提示刷新） */
         reg.addEventListener('updatefound', function () {
           var worker = reg.installing;

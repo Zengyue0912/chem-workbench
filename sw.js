@@ -1,10 +1,10 @@
 /* ============================================================================
  * 高中化学 3D 考点工作台 — Service Worker（工作流 3）
- * 位置：站点根目录 /sw.js（由 js/pwa.js 注册，scope 为整站）。
+ * 位置：站点根目录 sw.js（由 js/pwa.js 注册，scope 为整站；相对路径，兼容子路径部署如 GitHub Pages）。
  *
  * 策略：
  * - 预缓存（install）：核心页面 + 首屏 CSS/JS + 图标，离线可打开工作台入口。
- * - 导航请求：网络优先，失败时回退离线页 /offline.html。
+ * - 导航请求：网络优先，失败时回退离线页 offline.html。
  * - 同源静态资源（css/js/assets）：缓存优先，后台更新（stale-while-revalidate）。
  * - 其他同源请求：网络优先，失败时读缓存。
  * - 跨源请求（Bilibili 播放器等）：不拦截，直接放行。
@@ -14,9 +14,9 @@
  * ========================================================================== */
 'use strict';
 
-var CACHE_VERSION = 'w5-1';
+var CACHE_VERSION = 'w5-2';
 var CACHE_NAME = 'chem3d-v' + CACHE_VERSION;
-var OFFLINE_URL = '/offline.html';
+var OFFLINE_URL = 'offline.html';
 
 /* 预缓存：工作台首屏必需资源（W1 首屏清单 + W2 商业化外壳 + W3 新增层 + W4 工作台改版）
  * 协调员注：W2 完成后同步更新——新增 commerce/auth/plan/ai-config/onboarding、
@@ -24,60 +24,60 @@ var OFFLINE_URL = '/offline.html';
  * W4 同步更新——新增 workbench-* 覆盖层 CSS 与 JS（?v=w4-1）。
  * v2.2.0 同步更新——新增 AI 解题模块 CSS 与 JS（?v=w5-1）；tests/ 不进预缓存。 */
 var PRECACHE_URLS = [
-  '/',
-  '/app.html',
-  '/about.html',
-  '/privacy.html',
-  '/terms.html',
-  '/offline.html',
-  '/manifest.json',
-  '/css/inline-head.min.css?v=w1-1',
-  '/css/student-study.min.css?v=w1-1',
-  '/css/commerce.min.css?v=w2-1',
-  '/css/landing.min.css?v=w2-1',
-  '/css/mobile.min.css?v=w3-1',
-  '/css/enhance.min.css?v=w3-1',
-  '/css/workbench-layout.min.css?v=w4-1',
-  '/css/workbench-quiz.min.css?v=w4-1',
-  '/css/workbench-controls.min.css?v=w4-1',
-  '/css/workbench-learn.min.css?v=w4-1',
-  '/css/workbench-fx.min.css?v=w4-1',
-  '/css/workbench-solve.min.css?v=w5-1',
-  '/js/auth.min.js?v=w2-2',
-  '/js/loader.min.js?v=w1-1',
-  '/js/inline-00-e3-engine.min.js?v=w1-1',
-  '/js/inline-01-db-items.min.js?v=w1-1',
-  '/js/inline-02-db-app.min.js?v=w1-1',
-  '/js/inline-03-db-elem.min.js?v=w1-1',
-  '/js/inline-04-db-exps.min.js?v=w1-1',
-  '/js/inline-08-ui.min.js?v=w1-1',
-  '/js/inline-09-studio.min.js?v=w1-1',
-  '/js/student-study-stub.min.js?v=w1-1',
-  '/js/workbench-nav.min.js?v=w4-1',
-  '/js/plan.min.js?v=w2-2',
-  '/js/ai-config.min.js?v=w2-1',
-  '/js/onboarding.min.js?v=w2-1',
-  '/js/workbench-flashcards.min.js?v=w4-1',
-  '/js/workbench-socratic.min.js?v=w4-1',
-  '/js/workbench-gamify.min.js?v=w4-1',
-  '/js/workbench-conceptmap.min.js?v=w4-1',
-  '/js/landing.min.js?v=w2-1',
-  '/js/mobile.min.js?v=w3-1',
-  '/js/a11y.min.js?v=w3-1',
-  '/js/analytics.min.js?v=w3-1',
-  '/js/share.min.js?v=w3-1',
-  '/js/pwa.min.js?v=w3-1',
-  '/js/workbench-quiz.min.js?v=w4-1',
-  '/js/workbench-search.min.js?v=w4-1',
-  '/js/workbench-3d-preview.min.js?v=w4-1',
-  '/js/workbench-vibe.min.js?v=w4-1',
-  '/js/workbench-solve-engine.min.js?v=w5-1',
-  '/js/workbench-chem-render.min.js?v=w5-1',
-  '/js/workbench-solve-ocr.min.js?v=w5-1',
-  '/js/workbench-solve-flow.min.js?v=w5-1',
-  '/assets/jxnu-emblem.jpg',
-  '/assets/icon-192.png',
-  '/assets/icon-512.png'
+  './',
+  'app.html',
+  'about.html',
+  'privacy.html',
+  'terms.html',
+  'offline.html',
+  'manifest.json',
+  'css/inline-head.min.css?v=w1-1',
+  'css/student-study.min.css?v=w1-1',
+  'css/commerce.min.css?v=w2-1',
+  'css/landing.min.css?v=w2-1',
+  'css/mobile.min.css?v=w3-1',
+  'css/enhance.min.css?v=w3-1',
+  'css/workbench-layout.min.css?v=w4-1',
+  'css/workbench-quiz.min.css?v=w4-1',
+  'css/workbench-controls.min.css?v=w4-1',
+  'css/workbench-learn.min.css?v=w4-1',
+  'css/workbench-fx.min.css?v=w4-1',
+  'css/workbench-solve.min.css?v=w5-1',
+  'js/auth.min.js?v=w2-2',
+  'js/loader.min.js?v=w1-1',
+  'js/inline-00-e3-engine.min.js?v=w1-1',
+  'js/inline-01-db-items.min.js?v=w1-1',
+  'js/inline-02-db-app.min.js?v=w1-1',
+  'js/inline-03-db-elem.min.js?v=w1-1',
+  'js/inline-04-db-exps.min.js?v=w1-1',
+  'js/inline-08-ui.min.js?v=w1-1',
+  'js/inline-09-studio.min.js?v=w1-1',
+  'js/student-study-stub.min.js?v=w1-1',
+  'js/workbench-nav.min.js?v=w4-1',
+  'js/plan.min.js?v=w2-2',
+  'js/ai-config.min.js?v=w2-1',
+  'js/onboarding.min.js?v=w2-1',
+  'js/workbench-flashcards.min.js?v=w4-1',
+  'js/workbench-socratic.min.js?v=w4-1',
+  'js/workbench-gamify.min.js?v=w4-1',
+  'js/workbench-conceptmap.min.js?v=w4-1',
+  'js/landing.min.js?v=w2-1',
+  'js/mobile.min.js?v=w3-1',
+  'js/a11y.min.js?v=w3-1',
+  'js/analytics.min.js?v=w3-1',
+  'js/share.min.js?v=w3-1',
+  'js/pwa.min.js?v=w3-1',
+  'js/workbench-quiz.min.js?v=w4-1',
+  'js/workbench-search.min.js?v=w4-1',
+  'js/workbench-3d-preview.min.js?v=w4-1',
+  'js/workbench-vibe.min.js?v=w4-1',
+  'js/workbench-solve-engine.min.js?v=w5-1',
+  'js/workbench-chem-render.min.js?v=w5-1',
+  'js/workbench-solve-ocr.min.js?v=w5-1',
+  'js/workbench-solve-flow.min.js?v=w5-1',
+  'assets/jxnu-emblem.jpg',
+  'assets/icon-192.png',
+  'assets/icon-512.png'
 ];
 
 self.addEventListener('install', function (event) {
@@ -114,9 +114,9 @@ self.addEventListener('message', function (event) {
 });
 
 function isStaticAsset(url) {
-  return url.pathname.indexOf('/css/') === 0 ||
-    url.pathname.indexOf('/js/') === 0 ||
-    url.pathname.indexOf('/assets/') === 0;
+  return url.pathname.indexOf('/css/') !== -1 ||
+    url.pathname.indexOf('/js/') !== -1 ||
+    url.pathname.indexOf('/assets/') !== -1;
 }
 
 self.addEventListener('fetch', function (event) {
