@@ -117,6 +117,7 @@ const topics={
  }
 };
 function build(input){
+ const analysisText=a=>typeof root.ChemPracticeCore?.analysisText==='function'?root.ChemPracticeCore.analysisText(a):typeof a==='string'?a:'';
  const C=root.ChemTeachingCore,l=C.lessons.find(x=>x.id===input.topic),d=topics[input.topic];
  if(!l||!d)throw Error('请选择已有课程主题。');
  const minutes=Number(input.minutes),times=C.allocation(minutes);
@@ -134,7 +135,7 @@ function build(input){
  const goals=l.objectives.map((x,i)=>(i+1)+'. '+x).join('\n')+(objective?'\n本班补充目标：'+objective:'');
  const common='## 课程目标\n'+goals+'\n\n重点：'+l.focus+'\n难点：'+l.difficulty;
  const checks=d.criteria.map((x,i)=>(i+1)+'. '+x).join('\n');
- const teacherQ=questions.map((q,i)=>(i+1)+'. '+q.title+'（题号 '+q.id+'）\n核对参考：'+q.analysis).join('\n\n')||'从当前同步练习中另选与本课匹配的题，并先核对题干与答案。';
+ const teacherQ=questions.map((q,i)=>(i+1)+'. '+q.title+'（题号 '+q.id+'）\n核对参考：'+analysisText(q.analysis)).join('\n\n')||'从当前同步练习中另选与本课匹配的题，并先核对题干与答案。';
  const studentQ=questions.map((q,i)=>(i+1)+'. '+q.title+'（题号 '+q.id+'）\n'+q.stem+(q.options?'\n'+q.options.map((o,j)=>String.fromCharCode(65+j)+'. '+o).join('\n'):'\n'+q.parts.map((p,j)=>'（'+(j+1)+'）'+p.prompt+(p.unit?'（'+p.unit+'）':'')).join('\n'))+'\n我的作答与依据：________________').join('\n\n')||'由老师从当前练习题包指定配套题，写出作答依据。';
  const teacher='# '+title+' · 教师版教学SOP\n\n'+meta+'\n\n'+common+'\n\n## 课前：备课与检查\n学情：'+student+'\n预备知识：'+d.prerequisite+'\n准备材料：'+d.tools+'\n教师准备：'+d.prepare+'\n交给学生的预习问题：'+d.predict+'\n检查点：确认页面、记录表和配套题可用；若网络不可用，改用纸面任务单。\n\n## 课中：按步骤组织\n'+phases.map((p,i)=>'### T'+(i+1)+' '+p.title+'（'+p.minutes+'分钟）\n教师做：'+p.teacher+'\n学生做：'+p.student+'\n收什么／看什么：'+p.evidence).join('\n\n')+'\n\n## 本课核对参考（供教师备课）\n'+d.reference+'\n'+d.example+'\n\n## 完成标准与分层支持\n'+checks+'\n需要帮助时：'+d.support+'\n开放作答按原理、条件和推理核对，不因出现关键词直接判对。\n\n## 配套练习核对\n'+teacherQ+'\n题号对应随网页发布的内置题包；若老师已导入其他题包，请重新指定练习。\n\n## 板书安排\n'+l.board+'\n\n## 课后：反馈与调整\n作业：'+l.homework+'\n学生订正：'+d.after+'\n教师记录：哪些目标已达成____；哪一步仍有困难____；下次补讲什么____。\n\n## 助教怎么参与\n'+d.ai+'\n当前页面未连接模型时：'+d.offline+'\n教师核对助教的原理、条件、数值和出处后再采纳，不将其建议自动计入成绩。\n\n## 安全与使用边界\n'+l.safety+'\n本SOP用于教学设计与虚拟活动，真实实验须按学校实验室规范并由教师指导。课程草稿来自内置模板，需结合本班教材与进度调整。\n';
  const learner='# '+title+' · 学生版学习SOP\n\n'+meta+'\n\n姓名：________　班级：________　日期：________\n\n'+common+'\n\n## 课前：先想一想\n先确认自己会：'+d.prerequisite+'\n预习问题：'+d.predict+'\n我的猜想与理由：________________\n我还想问：________________\n\n## 课中：按步骤完成\n'+phases.map((p,i)=>'### S'+(i+1)+' '+p.title+'（'+p.minutes+'分钟）\n我要做：'+p.student+'\n要留下：'+(i===2?'下面的观察记录与推理过程。':i===4?'独立完成的离堂检查。':'我的判断、图示或一句解释。')).join('\n\n')+'\n\n## 观察与计算记录\n'+d.sheet.map((x,i)=>(i+1)+'. '+x).join('\n')+'\n\n## 配套练习（先独立作答）\n'+studentQ+'\n如果老师已换题包，以老师指定的题为准。\n\n## 完成后自查\n'+checks+'\n没有做到的一项：____；准备怎样补上：____。\n\n## 课后：订正与复练\n'+d.after+'\n作业：'+l.homework+'\n我原来的想法：____；修改后的依据：____；还要问老师的问题：____。\n\n## 使用助教\n'+d.ai+'\n若助教不可用：'+d.offline+'\n先写自己的想法，再请它提示；最后用教材、实验条件或老师讲解核对。\n\n## 安全提醒\n'+l.safety+'\n网页里的操作和现象是教学示意，不能据此自行开展真实化学实验。\n';

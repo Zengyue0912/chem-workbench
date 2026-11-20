@@ -30,7 +30,7 @@ var BUNDLES = {
          'js/inline-07-viewer.min.js']
   },
   lessons: {
-    js: ['js/inline-10-lesson-sop.min.js',
+    js: ['js/inline-10-lesson-sop.min.js?v=w2.4.0',
          'js/inline-11-lesson-md.min.js',
          'js/inline-12-lesson-flow.min.js']
   },

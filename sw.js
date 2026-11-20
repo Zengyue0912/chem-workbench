@@ -14,7 +14,7 @@
  * ========================================================================== */
 'use strict';
 
-var CACHE_VERSION = 'w5-4';
+var CACHE_VERSION = 'w6-1';
 var CACHE_NAME = 'chem3d-v' + CACHE_VERSION;
 var OFFLINE_URL = 'offline.html';
 
@@ -44,14 +44,16 @@ var PRECACHE_URLS = [
   'css/workbench-fx.min.css?v=w4-1',
   'css/workbench-solve.min.css?v=w5-1',
   'js/auth.min.js?v=w2-2',
-  'js/loader.min.js?v=w2.2.1',
+  'js/loader.min.js?v=w2.4.0',
   'js/inline-00-e3-engine.min.js?v=w1-1',
   'js/inline-01-db-items.min.js?v=w1-1',
   'js/inline-02-db-app.min.js?v=w1-1',
   'js/inline-03-db-elem.min.js?v=w1-1',
   'js/inline-04-db-exps.min.js?v=w1-1',
   'js/inline-08-ui.min.js?v=w1-1',
-  'js/inline-09-studio.min.js?v=w1-1',
+  'js/practice-bank-concept.min.js?v=w2.4.0',
+  'js/practice-bank-exam.min.js?v=w2.4.0',
+  'js/inline-09-studio.min.js?v=w2.4.0',
   'js/student-study-stub.min.js?v=w1-1',
   'js/workbench-nav.min.js?v=w4-1',
   'js/plan.min.js?v=w2-2',
@@ -72,6 +74,7 @@ var PRECACHE_URLS = [
   'js/workbench-3d-preview.min.js?v=w4-1',
   'js/workbench-vibe.min.js?v=w4-1',
   'js/workbench-solve-engine.min.js?v=w5-1',
+  'js/workbench-practice-gen.min.js?v=w2.4.0',
   'js/workbench-chem-render.min.js?v=w5-1',
   'js/workbench-solve-ocr.min.js?v=w5-1',
   'js/workbench-solve-flow.min.js?v=w5-3',

@@ -160,19 +160,24 @@
 <!-- 工作流 2：auth.js 必须排在 loader.js 之前——它在执行时同步完成账号命名空间换入， -->
 <!-- 保证后续工作台脚本读到的 localStorage 已是当前账号的数据。 -->
 <script defer src="js/auth.min.js?v=w2-2"></script>
-<script defer src="js/loader.min.js?v=w2.2.1"></script>
+<script defer src="js/loader.min.js?v=w2.4.0"></script>
 <script defer src="js/inline-00-e3-engine.min.js?v=w1-1"></script>
 <script defer src="js/inline-01-db-items.min.js?v=w1-1"></script>
 <script defer src="js/inline-02-db-app.min.js?v=w1-1"></script>
 <script defer src="js/inline-03-db-elem.min.js?v=w1-1"></script>
 <script defer src="js/inline-04-db-exps.min.js?v=w1-1"></script>
 <script defer src="js/inline-08-ui.min.js?v=w1-1"></script>
-<script defer src="js/inline-09-studio.min.js?v=w1-1"></script>
+<!-- v2.4.0 同步练习扩展题库（须在 inline-09 之前：合并逻辑在 inline-09 加载时读取这两个数组） -->
+<script defer src="js/practice-bank-concept.min.js?v=w2.4.0"></script>
+<script defer src="js/practice-bank-exam.min.js?v=w2.4.0"></script>
+<script defer src="js/inline-09-studio.min.js?v=w2.4.0"></script>
 <script defer src="js/student-study-stub.min.js?v=w1-1"></script>
 <!-- 工作流 4（B 组）：左侧导航折叠/滚动/掌握状态 + 滚动提示 + 原子轨道对比度 -->
 <script defer src="js/workbench-nav.min.js?v=w4-1"></script>
 <!-- v2.2.0 AI 解题基础设施（无依赖，须在 flow 之前；ocr 须在首次 ChemLazy.load('study') 之前加载以拦截原 OCR 模块，defer 脚本均在用户交互前执行完毕） -->
 <script defer src="js/workbench-solve-engine.min.js?v=w5-1"></script>
+<!-- v2.4.0 变式生成器（须在引擎之后：生成时调用引擎算答案） -->
+<script defer src="js/workbench-practice-gen.min.js?v=w2.4.0"></script>
 <script defer src="js/workbench-chem-render.min.js?v=w5-1"></script>
 <script defer src="js/workbench-solve-ocr.min.js?v=w5-1"></script>
 <!-- 工作流 2：商业化外壳（定价门控 → AI 配置 → 新手引导；顺序有依赖：ai-config 包装 plan 包装过的 Tutor.send） -->
