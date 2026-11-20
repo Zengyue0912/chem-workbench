@@ -1,73 +1,111 @@
 /* ============================================================================
- * 高中化学 3D 考点工作台 — AI 助手配置与降级（工作流 2：商业化产品外壳）
- * ============================================================================
- * 现状（工作流 1 保留的原站行为，见 js/inline-09-studio.js）：
- *  - 化学助教 window.ChemTutor 在“共享版”覆盖中被强制为 local 模式：
- *    T.check() 恒置 mode='local'，send() 走 this.local(q, context) 做
- *    站内资料规则检索，从不调用 /api/chat。
- *  - 原始联网分支仍在 send() 内：mode==='online' 时 POST /api/chat，
- *    失败则显示连接错误。本模块不改动该源码，而是在外层包装实现降级。
- *
- * 本模块做的三件事（全部运行时包装，不改 W1 源码）：
- *  1. 演示模式（默认）：包装 Tutor.local，扩充内置规则知识库（按关键词
- *     匹配高中化学知识点），并在每条回答后明确标注“演示模式：接通 API
- *     后可用完整 AI 助手”。
- *  2. API 模式：用户在设置面板选择“云端接口”或“自定义接口”后，包装
- *     Tutor.send：先调接口，成功则渲染；任何失败（网络错误、非 2xx、
- *     超时、返回异常）都自动降级为演示模式回答，并在助教面板提示
- *     “接口不可用，已切换为演示模式”。
- *  3. 设置面板：用户填写 API Base URL / Key / 模型名；Key 只存本机
- *     localStorage，绝不进代码、不上传本站服务器（仅随请求发给用户
- *     自己配置的接口地址）。
- *
- * 接口说明：
- *  - “云端接口”：POST /api/chat（Netlify 上由 netlify.toml 的 redirect
- *    重写到 /.netlify/functions/chat，见 netlify/functions/chat.js）。
- *    同源请求，符合本站 CSP（connect-src 'self'）。
- *  - “自定义接口”：OpenAI 兼容的 <BaseURL>/chat/completions。
- *    注意：跨域地址可能被本站 CSP（connect-src 'self'）拦截；如需
- *    跨域调用，请管理员把域名加入 CSP connect-src，或改用云端接口。
- *
- * 与 js/plan.js 的协作：plan.js 先包装 Tutor.send（限额）；本模块再包
- * 一层。API 模式下本模块自行计次一次，降级分支调用 Tutor.__chemOrigSend
- * （plan.js 保存的原始 send）以避免重复计次；若加载顺序异常导致
- * plan.js 后包装，本模块通过 T.send !== myWrapper 判断 plan 已计次，
- * 同样只计一次。
- * ========================================================================== */
+* 高中化学 3D 考点工作台 — AI 助手配置与降级（v2.3.0 重做）
+* ============================================================================
+* v2.3.0 改了什么（之前“配置大模型”一块的问题）：
+* 1. 原站 Tutor.settings（助教面板“连接”按钮）只认本机服务：要跑
+* “启动工作室.cmd” + 本机环境变量 deepseek-api，在线上部署（GitHub
+* Pages / Netlify）下永远连不上，文案还会误导用户去跑本地脚本。
+* 本轮把它接管：同一个按钮改为打开本模块的 AI 设置面板，不再出现
+* 两个入口、两种说法。
+* 2. 旧设置面板没有供应商预设，用户得手填 Base URL；还推荐“云端接口”，
+* 但 /api/chat 只在 Netlify 部署下存在，GitHub Pages 上永远 404。
+* 本轮加入一键供应商预设（DeepSeek 默认），并在 Pages 下自动隐藏
+* 云端接口选项，不再给走不通的路。
+* 3. 旧自定义接口只发当前一句话（无历史）、等全量返回才显示。
+* 本轮带上最近对话历史，并改用流式输出（SSE），边生成边显示，
+* “停止”按钮可随时中断；报错按 401/429/404/网络分别给中文提示。
+* 4. CSP：Netlify 的 connect-src 增加各预设供应商域名（Pages 本身不
+* 下发 CSP，不受影响；但若以后迁回 Netlify，自定义接口同样可用）。
+*
+* 架构（全部运行时包装，不改 W1 源码）：
+* - 演示模式（默认）：包装 Tutor.local，扩充内置规则知识库。
+* - 自定义接口：浏览器直连用户配置的 OpenAI 兼容接口（DeepSeek 等），
+* Key 只存本机 localStorage，绝不进代码、不上传本站服务器（仅随请求
+* 发给用户自己配置的接口地址）。
+* - 云端接口：同源 /api/chat（仅 Netlify 部署，见 netlify/functions/chat.js）。
+* - 任一环节失败都自动降级为演示模式回答，并在助教面板提示原因。
+* ========================================================================== */
 (function () {
 'use strict';
 
 var CONFIG_KEY = 'chem3d_ai_config_v1';
-var DEMO_NOTICE = '\n\n【演示模式】以上为内置规则回答，未连接大模型；接通 API 后可用完整 AI 助手（点助教面板右上角的“AI 设置”配置）。';
+var DEMO_NOTICE = '\n\n以上为内置规则回答，未连接大模型；点助教面板的“AI 设置”填入 API Key（推荐 DeepSeek）即可用完整 AI 助手。';
 var API_TIMEOUT_MS = 30000;
+var STREAM_TIMEOUT_MS = 120000;
+var ON_PAGES = typeof location!== 'undefined' && /\.github\.io$/.test(location.hostname || '');
+
+/* ---------------- 供应商预设（OpenAI 兼容接口） ----------------
+* 备注只写定性信息（便宜/有免费额度），不写具体价格（以供应商官网为准）。 */
+var PRESETS = [
+{ id: 'deepseek', name: 'DeepSeek（推荐）', baseUrl: 'https://api.deepseek.com/v1', model: 'deepseek-chat',
+keyUrl: 'https://platform.deepseek.com/api_keys', keyHint: '在 platform.deepseek.com 注册后创建 API Key',
+note: '中文好、便宜，按量计费，是学生最常用的选择。'},
+{ id: 'qwen', name: '通义千问', baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1', model: 'qwen-plus',
+keyUrl: 'https://bailian.console.aliyun.com/?apiKey=1#/api-key', keyHint: '在阿里云百炼控制台创建 API Key',
+note: '阿里巴巴的大模型，新用户有免费额度。'},
+{ id: 'kimi', name: 'Kimi', baseUrl: 'https://api.moonshot.cn/v1', model: 'moonshot-v1-8k',
+keyUrl: 'https://platform.moonshot.cn/console/api-keys', keyHint: '在 Kimi 开放平台创建 API Key',
+note: '长文本能力强，按量计费。'},
+{ id: 'glm', name: '智谱 GLM', baseUrl: 'https://open.bigmodel.cn/api/paas/v4', model: 'glm-4-flash',
+keyUrl: 'https://open.bigmodel.cn/usercenter/proj-mgmt/apikeys', keyHint: '在智谱开放平台创建 API Key',
+note: 'glm-4-flash 模型有免费额度，适合先试用。'},
+{ id: 'siliconflow', name: '硅基流动', baseUrl: 'https://api.siliconflow.cn/v1', model: 'Qwen/Qwen2.5-7B-Instruct',
+keyUrl: 'https://cloud.siliconflow.cn/account/ak', keyHint: '在硅基流动控制台创建 API Key',
+note: '部分模型免费，注册即有体验额度。'},
+{ id: 'openai', name: 'OpenAI', baseUrl: 'https://api.openai.com/v1', model: 'gpt-4o-mini',
+keyUrl: 'https://platform.openai.com/api-keys', keyHint: '在 OpenAI 平台创建 API Key',
+note: '需要境外支付方式，国内访问可能不稳定。'},
+{ id: 'custom', name: '自定义接口', baseUrl: '', model: '',
+keyUrl: '', keyHint: '填写任意 OpenAI 兼容接口的地址、Key 与模型名',
+note: '本地部署（如 Ollama）或其它兼容服务请选这一项。'}
+];
+function presetById(id) {
+for (var i = 0; i < PRESETS.length; i++) if (PRESETS[i].id === id) return PRESETS[i];
+return null;
+}
 
 /* ---------------- 配置读写（Key 只存 localStorage） ---------------- */
 function defaultConfig() {
-  return { mode: 'demo', baseUrl: '', apiKey: '', model: 'deepseek-chat' };
+return { mode: 'demo', provider: 'deepseek', baseUrl: 'https://api.deepseek.com/v1', apiKey: '', model: 'deepseek-chat'};
 }
 function getConfig() {
-  try {
-    var raw = localStorage.getItem(CONFIG_KEY);
-    if (!raw) return defaultConfig();
-    var c = JSON.parse(raw);
-    var d = defaultConfig();
-    return {
-      mode: ['demo', 'function', 'custom'].indexOf(c.mode) !== -1 ? c.mode : 'demo',
-      baseUrl: typeof c.baseUrl === 'string' ? c.baseUrl : d.baseUrl,
-      apiKey: typeof c.apiKey === 'string' ? c.apiKey : d.apiKey,
-      model: typeof c.model === 'string' && c.model ? c.model : d.model
-    };
-  } catch (e) { return defaultConfig(); }
+try {
+var raw = localStorage.getItem(CONFIG_KEY);
+if (!raw) return defaultConfig();
+var c = JSON.parse(raw);
+var d = defaultConfig();
+var mode = ['demo', 'function', 'custom'].indexOf(c.mode)!== -1? c.mode: 'demo';
+/* GitHub Pages 没有 /api/chat，云端接口模式在此永远不可用，读到旧配置时直接当演示模式。 */
+if (ON_PAGES && mode === 'function') mode = 'demo';
+var provider = presetById(c.provider)? c.provider: (mode === 'custom'? 'custom': d.provider);
+return {
+mode: mode,
+provider: provider,
+baseUrl: typeof c.baseUrl === 'string'? c.baseUrl: d.baseUrl,
+apiKey: typeof c.apiKey === 'string'? c.apiKey: d.apiKey,
+model: typeof c.model === 'string' && c.model? c.model: d.model
+};
+} catch (e) { return defaultConfig();}
 }
 function setConfig(cfg) {
-  try {
-    localStorage.setItem(CONFIG_KEY, JSON.stringify({
-      mode: cfg.mode, baseUrl: cfg.baseUrl || '',
-      apiKey: cfg.apiKey || '', model: cfg.model || 'deepseek-chat'
-    }));
-    return true;
-  } catch (e) { return false; }
+try {
+var p = presetById(cfg.provider)? cfg.provider: 'custom';
+localStorage.setItem(CONFIG_KEY, JSON.stringify({
+mode: cfg.mode, provider: p,
+baseUrl: cfg.baseUrl || '', apiKey: cfg.apiKey || '',
+model: cfg.model || 'deepseek-chat'
+}));
+return true;
+} catch (e) { return false;}
 }
+
+/* ---------------- 系统提示词 ---------------- */
+var SYSTEM_PROMPT =
+'你是高中化学 3D 考点工作台的 AI 化学助教，面向中国高中生备考高考化学。' +
+'用中文回答，简明扼要，先给结论再讲原因；涉及计算时把公式、代入、结果分步写清楚，' +
+'化学式用纯文本（如 H2SO4、Fe2O3），不要用 LaTeX。' +
+'学生问“为什么”时用启发式讲解，不要只给答案；不确定的内容要明确说需要核对教材，绝不编造。' +
+'回答供学习参考。';
 
 /* ---------------- 演示知识库：关键词 → 简短讲解 ----------------
  * 覆盖高中化学高频考点；匹配规则为“命中关键词个数最多者胜出”。
@@ -123,10 +161,31 @@ function wrapTutorLocal() {
   return true;
 }
 
-/* ---------------- API 调用（任一环节失败都抛错，由上层降级） ---------------- */
+/* ---------------- 错误转中文提示 ---------------- */
+function describeError(err, status) {
+  var code = status || (err && err.status) || 0;
+  if (code === 401) return 'API Key 不正确或已失效，请在 AI 设置里检查 Key。';
+  if (code === 402) return '账户余额不足，请到供应商平台充值。';
+  if (code === 429) return '请求太频繁或额度用完，稍后再试。';
+  if (code === 404) return '模型名或接口地址不对，请在 AI 设置里检查。';
+  if (code === 400) return '请求被拒绝（400），可能是模型名或参数不对。';
+  if (code >= 500) return '供应商服务暂时不可用（' + code + '），稍后再试。';
+  if (err && err.name === 'AbortError') return '请求超时，请检查网络后重试。';
+  if (err && err.name === 'TimeoutError') return '请求超时，请检查网络后重试。';
+  if (err && err.message && /Failed to fetch|NetworkError|Network request failed/i.test(err.message)) {
+    return '浏览器没能连上接口地址（网络或跨域问题），可换个供应商试试。';
+  }
+  if (err && err.message) return err.message;
+  return '接口不可用。';
+}
+function apiError(message, status) {
+  var e = new Error(message);
+  e.status = status || 0;
+  return e;
+}
+
+/* ---------------- 云端接口（仅 Netlify 部署；Pages 下无此接口） ---------------- */
 async function callFunctionApi(text, tutor, signal) {
-  /* 云端接口：同源 /api/chat；Netlify 上由 redirect 重写到函数。
-   * 本地 python http.server 没有该接口，会 404 → 触发降级（符合预期）。 */
   var r = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -135,13 +194,25 @@ async function callFunctionApi(text, tutor, signal) {
   });
   var d = await r.json().catch(function () { return null; });
   if (!r.ok || !d || typeof d.answer !== 'string' || !d.answer) {
-    throw new Error((d && d.error) || '云端接口返回异常');
+    throw apiError((d && d.error) || '云端接口返回异常', r.status);
   }
   return d.answer;
 }
-async function callCustomApi(text, cfg, signal) {
+
+/* ---------------- 自定义接口：非流式（测试连接用） ---------------- */
+function buildMessages(text, history) {
+  var msgs = [{ role: 'system', content: SYSTEM_PROMPT }];
+  (history || []).slice(-8).forEach(function (h) {
+    if (h && (h.role === 'user' || h.role === 'assistant') && typeof h.content === 'string' && h.content) {
+      msgs.push({ role: h.role, content: h.content });
+    }
+  });
+  msgs.push({ role: 'user', content: text });
+  return msgs;
+}
+async function callCustomApi(text, cfg, signal, history) {
   var base = (cfg.baseUrl || '').replace(/\/+$/, '');
-  if (!base) throw new Error('未配置接口地址');
+  if (!base) throw apiError('未配置接口地址', 0);
   var headers = { 'Content-Type': 'application/json' };
   if (cfg.apiKey) headers.Authorization = 'Bearer ' + cfg.apiKey;
   var r = await fetch(base + '/chat/completions', {
@@ -149,10 +220,7 @@ async function callCustomApi(text, cfg, signal) {
     headers: headers,
     body: JSON.stringify({
       model: cfg.model || 'deepseek-chat',
-      messages: [
-        { role: 'system', content: '你是高中化学助教，用中文简明回答高中化学问题，回答供学习参考；不确定的内容要说明需要核对教材。' },
-        { role: 'user', content: text }
-      ],
+      messages: buildMessages(text, history),
       temperature: 0.7
     }),
     signal: signal
@@ -160,20 +228,89 @@ async function callCustomApi(text, cfg, signal) {
   var d = await r.json().catch(function () { return null; });
   var content = d && d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content;
   if (!r.ok || typeof content !== 'string' || !content) {
-    throw new Error((d && d.error && d.error.message) || '自定义接口返回异常');
+    throw apiError((d && d.error && d.error.message) || '自定义接口返回异常', r.status);
   }
   return content;
 }
 
+/* ---------------- 自定义接口：流式（SSE，边生成边显示） ----------------
+ * onDelta(fullText, isFirst) 在每次收到新增内容时回调。
+ * 返回完整文本；收到 0 字时抛错（由上层降级为演示回答）。
+ * 注意：fetch 流式读取需要 response.body；旧浏览器不支持时抛错走降级。 */
+async function callCustomApiStream(text, cfg, signal, history, onDelta) {
+  var base = (cfg.baseUrl || '').replace(/\/+$/, '');
+  if (!base) throw apiError('未配置接口地址', 0);
+  var headers = { 'Content-Type': 'application/json' };
+  if (cfg.apiKey) headers.Authorization = 'Bearer ' + cfg.apiKey;
+  var r = await fetch(base + '/chat/completions', {
+    method: 'POST',
+    headers: headers,
+    body: JSON.stringify({
+      model: cfg.model || 'deepseek-chat',
+      messages: buildMessages(text, history),
+      temperature: 0.7,
+      stream: true
+    }),
+    signal: signal
+  });
+  if (!r.ok) {
+    var d = await r.json().catch(function () { return null; });
+    throw apiError((d && d.error && d.error.message) || '自定义接口返回异常', r.status);
+  }
+  if (!r.body || typeof r.body.getReader !== 'function') {
+    /* 浏览器不支持流式读取：回退为非流式一次性请求。 */
+    return callCustomApi(text, cfg, signal, history);
+  }
+  var reader = r.body.getReader();
+  var decoder = new TextDecoder();
+  var buffer = '';
+  var full = '';
+  var first = true;
+  function handleLine(line) {
+    line = line.trim();
+    if (!line || line.indexOf('data:') !== 0) return;
+    var data = line.slice(5).trim();
+    if (!data || data === '[DONE]') return;
+    var obj;
+    try { obj = JSON.parse(data); } catch (e) { return; }
+    var delta = obj && obj.choices && obj.choices[0] && obj.choices[0].delta && obj.choices[0].delta.content;
+    if (typeof delta === 'string' && delta) {
+      full += delta;
+      if (onDelta) onDelta(full, first);
+      first = false;
+    }
+  }
+  for (;;) {
+    var chunk = await reader.read();
+    if (chunk.done) break;
+    buffer += decoder.decode(chunk.value, { stream: true });
+    var idx;
+    while ((idx = buffer.indexOf('\n')) !== -1) {
+      handleLine(buffer.slice(0, idx));
+      buffer = buffer.slice(idx + 1);
+    }
+  }
+  if (buffer) handleLine(buffer);
+  if (!full) throw apiError('接口没有返回内容', 0);
+  return full;
+}
+
 /* 走 API 提问：成功返回 true；失败返回 false（由调用方降级为演示回答）。
+ * 用户主动点“停止”且已有部分内容时，保留部分内容并返回 true，不再降级。
  * 注意：用户消息在 API 成功后才回显；失败时由原始 send() 回显，避免重复。 */
 async function sendViaApi(tutor, text, cfg) {
   var controller = new AbortController();
-  var timeout = setTimeout(function () { controller.abort(); }, API_TIMEOUT_MS);
+  var timedOut = false;
+  var timeoutMs = cfg.mode === 'custom' ? STREAM_TIMEOUT_MS : API_TIMEOUT_MS;
+  var timeout = setTimeout(function () { timedOut = true; controller.abort(); }, timeoutMs);
   var pending = null;
+  var bodyEl = null;
+  var tagEl = null;
+  var streamed = '';
   var sendBtn = document.getElementById('caSend');
   var stopBtn = document.getElementById('caStop');
   var errEl = document.getElementById('caError');
+  var providerName = (presetById(cfg.provider) || {}).name || '自定义接口';
   try {
     tutor.toggle(true);
     var input = document.getElementById('caInput');
@@ -184,17 +321,45 @@ async function sendViaApi(tutor, text, cfg) {
     if (sendBtn) sendBtn.disabled = true;
     if (stopBtn) stopBtn.hidden = false;
     pending = tutor.message('assistant', '正在连接 AI 接口…', [], [], '连接模型中');
-    var answer = cfg.mode === 'custom'
-      ? await callCustomApi(text, cfg, controller.signal)
-      : await callFunctionApi(text, tutor, controller.signal);
+    bodyEl = pending ? pending.querySelector('.ca-text') : null;
+    tagEl = pending ? pending.querySelector('.ca-tag') : null;
+    var answer;
+    if (cfg.mode === 'custom') {
+      answer = await callCustomApiStream(text, cfg, controller.signal, tutor.history, function (full, isFirst) {
+        streamed = full;
+        if (isFirst && tagEl) tagEl.textContent = '化学助教 · 大模型';
+        if (bodyEl) {
+          bodyEl.textContent = full;
+          var box = document.getElementById('caMessages');
+          if (box) box.scrollTop = box.scrollHeight;
+        }
+      });
+    } else {
+      answer = await callFunctionApi(text, tutor, controller.signal);
+    }
     if (pending) pending.remove();
     tutor.message('user', text);
-    tutor.message('assistant', answer, [], [], cfg.mode === 'custom' ? '化学助教 · 自定义接口' : '化学助教 · 云端接口');
+    tutor.message('assistant', answer, [], [], '化学助教 · 大模型（' + providerName + '）');
     tutor.history.push({ role: 'user', content: text }, { role: 'assistant', content: answer });
     tutor.history = tutor.history.slice(-8);
     return true;
   } catch (e) {
+    /* 用户主动停止：有内容就保留，没有内容就当作没问过，不降级演示。 */
+    if (e && e.name === 'AbortError' && !timedOut) {
+      if (streamed) {
+        if (bodyEl) bodyEl.textContent = streamed;
+        if (tagEl) tagEl.textContent = '化学助教 · 大模型（已停止）';
+        tutor.message('user', text);
+        tutor.history.push({ role: 'user', content: text }, { role: 'assistant', content: streamed });
+        tutor.history = tutor.history.slice(-8);
+      } else if (pending) {
+        pending.remove();
+      }
+      return true;
+    }
     if (pending) pending.remove();
+    /* 把中文原因记下来，降级后显示在助教面板。 */
+    sendViaApi.lastError = describeError(e);
     return false;
   } finally {
     clearTimeout(timeout);
@@ -221,6 +386,13 @@ function wrapTutorSend() {
     var text = (q == null ? (input ? input.value : '') : q);
     text = String(text == null ? '' : text).trim();
     if (!text || T.busy) return planWrapped.call(T, q);
+    /* 自定义接口没填 Key：直接演示回答，并提示去填 Key（不再发注定失败的请求）。 */
+    if (cfg.mode === 'custom' && !cfg.apiKey) {
+      await orig.call(T, text);
+      var errEl0 = document.getElementById('caError');
+      if (errEl0) errEl0.textContent = '还没填 API Key，已用演示模式回答；点“AI 设置”填入 Key 即可用真 AI。';
+      return;
+    }
     /* 限额只计一次：若 plan.js 后包装（T.send 已不是本函数），说明
      * plan 的包装层已计过次，这里不再重复计次。 */
     if (window.ChemPlan && T.send === myWrapper) {
@@ -232,7 +404,7 @@ function wrapTutorSend() {
      * 注意：原始 send() 开头会清空 #caError，所以提示要在它完成后再写。 */
     await orig.call(T, text);
     var errEl = document.getElementById('caError');
-    if (errEl) errEl.textContent = '接口不可用，已切换为演示模式。';
+    if (errEl) errEl.textContent = (sendViaApi.lastError || '接口不可用') + '已切换为演示模式。';
   };
   T.send = myWrapper;
   return true;
@@ -244,13 +416,16 @@ function refreshStatus() {
   if (!modeEl) return;
   var cfg = getConfig();
   if (cfg.mode === 'custom') {
-    modeEl.textContent = '自定义接口 · ' + (cfg.baseUrl || '未配置地址');
+    var p = presetById(cfg.provider);
+    modeEl.textContent = cfg.apiKey
+      ? '大模型 · ' + (p ? p.name : '自定义接口') + ' · ' + cfg.model
+      : '大模型未配置 Key · 点“AI 设置”填写';
     modeEl.classList.add('connected');
   } else if (cfg.mode === 'function') {
     modeEl.textContent = '云端接口 · 未配置服务端 Key 时自动演示';
     modeEl.classList.add('connected');
   } else {
-    modeEl.textContent = '演示模式 · 内置规则回答';
+    modeEl.textContent = '演示模式 · 点“AI 设置”接通大模型';
     modeEl.classList.remove('connected');
   }
 }
@@ -288,8 +463,9 @@ function openSettings() {
   var box = el('div', 'chem2-box chem2-ai-box');
   var title = el('h2', 'chem2-title', 'AI 助手设置');
   var note = el('p', 'chem2-note',
-    '演示模式使用内置规则回答，不消耗任何接口额度。接通 API 后可使用完整 AI 助手；' +
-    '接口地址与密钥只保存在本机 localStorage，不会上传到本站服务器，发送时只发给你配置的接口地址。');
+    '演示模式使用内置规则回答，不消耗任何接口额度。选一个供应商、填入它的 API Key，' +
+    '即可用真正的大模型问答（费用由你的供应商账户承担）。' +
+    'Key 只保存在本机浏览器里，不会上传到本站服务器，只随请求发给你选的供应商。');
   var status = el('p', 'chem2-status');
   status.setAttribute('role', 'status');
   var form = document.createElement('form');
@@ -298,9 +474,13 @@ function openSettings() {
 
   var modeLabel = el('label', 'chem2-field', '问答模式');
   var modeSelect = document.createElement('select');
-  [['demo', '演示模式（内置规则回答）'],
-   ['function', '云端接口（本站 Netlify 函数，需服务端配置 Key）'],
-   ['custom', '自定义接口（OpenAI 兼容）']].forEach(function (opt) {
+  var modeOptions = [
+    ['demo', '演示模式（内置规则回答）'],
+    ['custom', '大模型接口（填自己的 Key）']
+  ];
+  /* 云端接口只在 Netlify 部署下存在；GitHub Pages 上不提供该选项。 */
+  if (!ON_PAGES) modeOptions.push(['function', '云端接口（本站 Netlify 函数，需服务端配置 Key）']);
+  modeOptions.forEach(function (opt) {
     var o = document.createElement('option');
     o.value = opt[0]; o.textContent = opt[1];
     modeSelect.appendChild(o);
@@ -308,21 +488,40 @@ function openSettings() {
   modeSelect.value = cfg.mode;
   modeLabel.appendChild(modeSelect);
 
-  var baseLabel = el('label', 'chem2-field', 'API Base URL（自定义接口）');
+  /* 供应商预设（一键填入接口地址与模型名）。 */
+  var presetLabel = el('label', 'chem2-field', '供应商（点一个，地址和模型自动填好）');
+  var presetRow = el('div', 'chem2-presets');
+  var presetBtns = {};
+  PRESETS.forEach(function (p) {
+    var b = el('button', 'btn-sub', p.name);
+    b.type = 'button';
+    b.setAttribute('aria-pressed', 'false');
+    b.addEventListener('click', function () { applyPreset(p.id, true); });
+    presetBtns[p.id] = b;
+    presetRow.appendChild(b);
+  });
+  presetLabel.appendChild(presetRow);
+
+  var keyHelp = el('p', 'chem2-note');
+  var keyLink = document.createElement('a');
+  keyLink.target = '_blank';
+  keyLink.rel = 'noopener';
+
+  var baseLabel = el('label', 'chem2-field', 'API Base URL');
   var baseInput = document.createElement('input');
   baseInput.type = 'url'; baseInput.placeholder = '例如 https://api.deepseek.com/v1';
   baseInput.value = cfg.baseUrl || '';
   baseInput.autocomplete = 'off';
   baseLabel.appendChild(baseInput);
 
-  var keyLabel = el('label', 'chem2-field', 'API Key（自定义接口）');
+  var keyLabel = el('label', 'chem2-field', 'API Key');
   var keyInput = document.createElement('input');
-  keyInput.type = 'password'; keyInput.placeholder = '只存本机，不进代码';
+  keyInput.type = 'password'; keyInput.placeholder = '只存本机浏览器，不进代码';
   keyInput.value = cfg.apiKey || '';
   keyInput.autocomplete = 'off';
   keyLabel.appendChild(keyInput);
 
-  var modelLabel = el('label', 'chem2-field', '模型名（自定义接口）');
+  var modelLabel = el('label', 'chem2-field', '模型名');
   var modelInput = document.createElement('input');
   modelInput.type = 'text'; modelInput.placeholder = '例如 deepseek-chat';
   modelInput.value = cfg.model || 'deepseek-chat';
@@ -330,8 +529,8 @@ function openSettings() {
   modelLabel.appendChild(modelInput);
 
   var cspNote = el('p', 'chem2-note',
-    '提示：本站 CSP 仅允许同源请求（connect-src \'self\'），跨域自定义接口可能被浏览器拦截；' +
-    '推荐使用云端接口，或请管理员把接口域名加入 CSP 白名单。');
+    '如果测试连接报“网络或跨域问题”，说明浏览器没能连上该供应商，可换个供应商试试，' +
+    '或检查网络；保存后提问失败时会自动降级为演示模式，不影响使用。');
   var saveBtn = el('button', 'btn-main', '保存设置');
   saveBtn.type = 'submit';
   var testBtn = el('button', 'btn-sub', '测试连接');
@@ -342,18 +541,58 @@ function openSettings() {
   closeBtn.type = 'button';
   closeBtn.setAttribute('aria-label', '关闭');
 
+  var currentProvider = cfg.provider || 'deepseek';
+  function applyPreset(id, fill) {
+    var p = presetById(id);
+    if (!p) return;
+    currentProvider = id;
+    PRESETS.forEach(function (x) {
+      var b = presetBtns[x.id];
+      if (!b) return;
+      var on = x.id === id;
+      b.className = on ? 'btn-main' : 'btn-sub';
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    if (fill) {
+      baseInput.value = p.baseUrl;
+      modelInput.value = p.model;
+    }
+    keyHelp.textContent = p.keyHint + '。' + p.note + ' ';
+    if (p.keyUrl) {
+      keyLink.href = p.keyUrl;
+      keyLink.textContent = '去获取 Key ↗';
+      keyHelp.appendChild(keyLink);
+    }
+  }
+  /* 手动改地址或模型名后，视为自定义接口。 */
+  function onManualEdit() {
+    if (currentProvider === 'custom') return;
+    var p = presetById(currentProvider);
+    if (p && (baseInput.value.trim() !== p.baseUrl || modelInput.value.trim() !== p.model)) {
+      applyPreset('custom', false);
+    }
+  }
+  baseInput.addEventListener('input', onManualEdit);
+  modelInput.addEventListener('input', onManualEdit);
+
   function syncFields() {
     var custom = modeSelect.value === 'custom';
+    var fn = modeSelect.value === 'function';
+    presetLabel.style.display = custom ? '' : 'none';
+    keyHelp.style.display = custom ? '' : 'none';
     baseLabel.style.display = custom ? '' : 'none';
     keyLabel.style.display = custom ? '' : 'none';
     modelLabel.style.display = custom ? '' : 'none';
     cspNote.style.display = custom ? '' : 'none';
     testBtn.style.display = modeSelect.value === 'demo' ? 'none' : '';
+    if (fn) status.textContent = '云端接口由本站服务端调用大模型，费用由站点所有者承担；未配置服务端 Key 时自动用演示模式回答。';
+    else if (status.textContent.indexOf('云端接口由本站') === 0) status.textContent = '';
   }
   modeSelect.addEventListener('change', syncFields);
+  applyPreset(currentProvider, false);
   syncFields();
 
-  form.append(modeLabel, baseLabel, keyLabel, modelLabel, cspNote, status, saveBtn, testBtn, demoBtn);
+  form.append(modeLabel, presetLabel, keyHelp, baseLabel, keyLabel, modelLabel, cspNote, status, saveBtn, testBtn, demoBtn);
   box.append(closeBtn, title, note, form);
   mask.appendChild(box);
   document.body.appendChild(mask);
@@ -365,7 +604,7 @@ function openSettings() {
     if (e.key === 'Escape') { e.stopPropagation(); closeSettings(); }
   });
   demoBtn.addEventListener('click', function () {
-    setConfig({ mode: 'demo', baseUrl: '', apiKey: '', model: 'deepseek-chat' });
+    setConfig({ mode: 'demo', provider: 'deepseek', baseUrl: 'https://api.deepseek.com/v1', apiKey: '', model: 'deepseek-chat' });
     refreshStatus();
     toast('已恢复演示模式。');
     closeSettings();
@@ -373,12 +612,14 @@ function openSettings() {
   testBtn.addEventListener('click', async function () {
     var testCfg = {
       mode: modeSelect.value,
+      provider: currentProvider,
       baseUrl: baseInput.value.trim(),
       apiKey: keyInput.value.trim(),
       model: modelInput.value.trim() || 'deepseek-chat'
     };
     if (testCfg.mode === 'demo') { status.textContent = '演示模式无需测试。'; return; }
-    if (testCfg.mode === 'custom' && !testCfg.baseUrl) { status.textContent = '请先填写 API Base URL。'; return; }
+    if (testCfg.mode === 'custom' && !testCfg.baseUrl) { status.textContent = '请先选供应商或填写 API Base URL。'; return; }
+    if (testCfg.mode === 'custom' && !testCfg.apiKey) { status.textContent = '请先填写 API Key（按上方提示去供应商平台获取）。'; return; }
     status.textContent = '正在测试连接…';
     testBtn.disabled = true;
     try {
@@ -386,12 +627,12 @@ function openSettings() {
       var controller = new AbortController();
       var timer = setTimeout(function () { controller.abort(); }, API_TIMEOUT_MS);
       var reply = testCfg.mode === 'custom'
-        ? await callCustomApi('你好，请用一句话介绍你自己。', testCfg, controller.signal)
+        ? await callCustomApi('你好，请用一句话介绍你自己。', testCfg, controller.signal, [])
         : await callFunctionApi('你好，请用一句话介绍你自己。', T, controller.signal);
       clearTimeout(timer);
       status.textContent = '连接成功：' + reply.slice(0, 80);
     } catch (e) {
-      status.textContent = '连接失败：' + (e && e.message ? e.message : '接口不可用') + '。保存后提问时将自动降级为演示模式。';
+      status.textContent = '连接失败：' + describeError(e) + '保存后提问时将自动降级为演示模式。';
     } finally {
       testBtn.disabled = false;
     }
@@ -400,31 +641,39 @@ function openSettings() {
     e.preventDefault();
     var next = {
       mode: modeSelect.value,
+      provider: currentProvider,
       baseUrl: baseInput.value.trim(),
       apiKey: keyInput.value.trim(),
       model: modelInput.value.trim() || 'deepseek-chat'
     };
     if (next.mode === 'custom' && !next.baseUrl) {
-      status.textContent = '自定义接口需要填写 API Base URL。';
+      status.textContent = '请先选供应商或填写 API Base URL。';
       return;
     }
     setConfig(next);
     refreshStatus();
-    toast(next.mode === 'demo' ? '已切换为演示模式。' : 'AI 设置已保存。');
+    toast(next.mode === 'demo' ? '已切换为演示模式。' : (next.apiKey ? 'AI 设置已保存，可以开始提问了。' : 'AI 设置已保存，填入 API Key 后即可用真 AI。'));
     closeSettings();
   });
 }
 
-/* ---------------- 在助教面板注入“AI 设置”按钮 ---------------- */
-function injectSettingsButton() {
-  var ctx = document.querySelector('.ca-context');
-  if (!ctx || document.getElementById('chem2AiSettings')) return;
-  var btn = el('button', 'btn-sub', 'AI 设置');
-  btn.id = 'chem2AiSettings';
-  btn.type = 'button';
-  btn.title = '配置 AI 接口（演示模式 / 云端接口 / 自定义接口）';
-  btn.addEventListener('click', openSettings);
-  ctx.appendChild(btn);
+/* ---------------- 接管助教面板的“连接”按钮 ----------------
+ * 原站该按钮打开 Tutor.settings（本机服务配置），在线上部署下永远不可用；
+ * 本轮改为打开本模块的 AI 设置面板，全站只剩一个大模型配置入口。
+ * 旧版 ai-config 曾额外注入第二个“AI 设置”按钮，本轮不再注入；若页面上
+ * 已有该按钮（不会发生，仅作防御），一并移除。 */
+function rewireSettingsButton() {
+  var btn = document.getElementById('caSettings');
+  if (!btn) return false;
+  if (!btn.__chemAIRewired) {
+    btn.__chemAIRewired = true;
+    btn.textContent = 'AI 设置';
+    btn.title = '配置大模型（供应商 / API Key / 模型）';
+    btn.onclick = function () { openSettings(); };
+  }
+  var dup = document.getElementById('chem2AiSettings');
+  if (dup) dup.remove();
+  return true;
 }
 
 /* ---------------- 初始化（带有限重试，防脚本加载顺序变化） ---------------- */
@@ -432,9 +681,9 @@ function injectSettingsButton() {
   var okLocal = wrapTutorLocal();
   var okSend = wrapTutorSend();
   wrapSetStatus();
-  injectSettingsButton();
+  var okBtn = rewireSettingsButton();
   refreshStatus();
-  if ((okLocal && okSend) || attempt >= 10) return;
+  if ((okLocal && okSend && okBtn) || attempt >= 10) return;
   setTimeout(function () { init(attempt + 1); }, 500);
 })(0);
 
@@ -445,9 +694,20 @@ window.ChemAI = {
   openSettings: openSettings,
   closeSettings: closeSettings,
   refreshStatus: refreshStatus,
+  /* 供应商预设（供设置面板与测试复用）。 */
+  PRESETS: PRESETS,
+  presetById: presetById,
   /* 演示知识库查询（供测试与复用；无命中返回 null）。 */
   demoAnswer: demoAnswer,
-  DEMO_NOTICE: DEMO_NOTICE
+  DEMO_NOTICE: DEMO_NOTICE,
+  /* 供测试的内部接口。 */
+  _test: {
+    describeError: describeError,
+    buildMessages: buildMessages,
+    callCustomApi: callCustomApi,
+    callCustomApiStream: callCustomApiStream,
+    isGitHubPages: ON_PAGES
+  }
 };
 
 })();

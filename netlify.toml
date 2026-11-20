@@ -67,7 +67,7 @@
     #   跨源 worker），worker 内再 importScripts 核心与 fetch 语言包。
     # - connect-src 'self'：仅同源 /api/*（静态部署下不存在，代码已做失败兜底）；
     #   v2.2.0 OCR CDN 放行——另放行 https://cdn.jsdelivr.net（语言包 fetch）。
-    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src https://player.bilibili.com https://*.bilibili.com; worker-src 'self' blob: https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src https://player.bilibili.com https://*.bilibili.com; worker-src 'self' blob: https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://api.deepseek.com https://dashscope.aliyuncs.com https://api.moonshot.cn https://open.bigmodel.cn https://api.siliconflow.cn https://api.openai.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
 
 # ---------- 工作流 2：商业化外壳 ----------
 # Netlify Functions 目录：netlify/functions/chat.js（AI 问答占位函数，

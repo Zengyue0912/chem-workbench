@@ -245,7 +245,9 @@ netlify deploy --dir=. --prod
   定义；门控点见 `plan.js` 的 `GATES` 数组。
 - **账号**：演示级本地账号，数据在 `localStorage`（`chem3d_acct_<userId>_v1`
   命名空间）；接后端时实现 `js/auth.js` 中的 `AuthProvider` 接口。
-- **AI 助手**：默认演示模式；用户在助教面板 → AI 设置可填自定义接口；
+- **AI 助手**：默认演示模式；用户在助教面板 → AI 设置可一键选供应商预设
+  （DeepSeek / 通义千问 / Kimi / 智谱 GLM / 硅基流动 / OpenAI / 自定义），
+  填入自己的 API Key 后即用真大模型流式问答，Key 只存本机浏览器；
   服务端方式见 `netlify/functions/chat.js`（在 Netlify 后台配大模型 API Key
   到环境变量）。注意 CSP `connect-src 'self'` 会拦截跨域自定义接口，
   推荐走同源 `/api/chat`。

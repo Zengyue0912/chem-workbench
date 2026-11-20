@@ -14,7 +14,7 @@
  * ========================================================================== */
 'use strict';
 
-var CACHE_VERSION = 'w5-3';
+var CACHE_VERSION = 'w5-4';
 var CACHE_NAME = 'chem3d-v' + CACHE_VERSION;
 var OFFLINE_URL = 'offline.html';
 
@@ -55,7 +55,7 @@ var PRECACHE_URLS = [
   'js/student-study-stub.min.js?v=w1-1',
   'js/workbench-nav.min.js?v=w4-1',
   'js/plan.min.js?v=w2-2',
-  'js/ai-config.min.js?v=w2-1',
+  'js/ai-config.min.js?v=w2.3.0',
   'js/onboarding.min.js?v=w2-1',
   'js/workbench-flashcards.min.js?v=w4-1',
   'js/workbench-socratic.min.js?v=w4-1',
