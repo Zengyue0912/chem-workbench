@@ -388,6 +388,47 @@ function cloneWithId(q, id) { const c = JSON.parse(JSON.stringify(q)); c.id = id
   ok('无旧记录时返回空对象', JSON.stringify(C.migrateRecords(pack, [])) === '{}');
 })();
 
+/* ================= 7. 列表分组与状态（v2.4.1 排版重做） ================= */
+(function () {
+  console.log('— 7. 列表分组与状态 —');
+  const groups = C.groupPracticeQuestions(MERGED, {});
+  const topics = groups.map(g => g.topic);
+  ok('分出 6 个主题组', groups.length === 6, '实际 ' + groups.length);
+  ok('6 组主题齐全且顺序与题包首次出现一致',
+    TOPICS.every(t => topics.indexOf(t) >= 0) &&
+    JSON.stringify(topics) === JSON.stringify([...new Set(MERGED.map(q => q.topic))]),
+    '实际顺序：' + topics.join('、'));
+  const total = groups.reduce((n, g) => n + g.total, 0);
+  ok('各组题数之和为 121', total === 121, '实际 ' + total);
+  const perTopicOk = groups.every(g => g.total === MERGED.filter(q => q.topic === g.topic).length);
+  ok('每组题数与题库实际分布一致', perTopicOk);
+  ok('无记录时全部为 todo', groups.every(g => g.questions.every(x => x.state === 'todo')));
+
+  const records = {
+    s01: { result: { score: 4, max: 4 } },
+    s02: { result: { score: 0, max: 4 } },
+    s03: { answers: { choice: 1 } },
+    s04: {},
+    ghost: { result: { score: 4, max: 4 } },
+  };
+  const g2 = C.groupPracticeQuestions(MERGED, records);
+  const find = id => { for (const g of g2) { const x = g.questions.find(y => y.q.id === id); if (x) return x; } return null; };
+  ok('状态判定：满分 done、未满分 weak、有草稿 doing、无记录 todo',
+    find('s01').state === 'done' && find('s02').state === 'weak' &&
+    find('s03').state === 'doing' && find('s04').state === 'todo');
+  ok('全局序号 num 与题包顺序一致（s01=1、s02=2、s03=3）',
+    find('s01').num === 1 && find('s02').num === 2 && find('s03').num === 3);
+  const gMat = g2.find(g => g.topic === '物质与反应');
+  ok('组统计：done/weak 计数与分数汇总正确',
+    gMat.done === 1 && gMat.weak === 1 && gMat.score === 4 && gMat.max === 8,
+    'done=' + gMat.done + ' weak=' + gMat.weak + ' score=' + gMat.score + ' max=' + gMat.max);
+  ok('不存在于题包的记录 id 被忽略', find('ghost') === null);
+  ok('空与异常输入返回空数组',
+    JSON.stringify(C.groupPracticeQuestions(null, null)) === '[]' &&
+    JSON.stringify(C.groupPracticeQuestions([], {})) === '[]' &&
+    JSON.stringify(C.groupPracticeQuestions([{ id: 'x' }], {})) === '[]');
+})();
+
 console.log('\n通过 ' + passed + '/' + (passed + failed));
 process.exit(failed ? 1 : 0);
 

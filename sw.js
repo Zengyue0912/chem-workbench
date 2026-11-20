@@ -14,7 +14,7 @@
  * ========================================================================== */
 'use strict';
 
-var CACHE_VERSION = 'w6-1';
+var CACHE_VERSION = 'w6-2';
 var CACHE_NAME = 'chem3d-v' + CACHE_VERSION;
 var OFFLINE_URL = 'offline.html';
 
@@ -31,7 +31,7 @@ var PRECACHE_URLS = [
   'terms.html',
   'offline.html',
   'manifest.json',
-  'css/inline-head.min.css?v=w1-1',
+  'css/inline-head.min.css?v=w1-2',
   'css/student-study.min.css?v=w1-1',
   'css/commerce.min.css?v=w2-1',
   'css/landing.min.css?v=w2-1',
@@ -53,7 +53,7 @@ var PRECACHE_URLS = [
   'js/inline-08-ui.min.js?v=w1-1',
   'js/practice-bank-concept.min.js?v=w2.4.0',
   'js/practice-bank-exam.min.js?v=w2.4.0',
-  'js/inline-09-studio.min.js?v=w2.4.0',
+  'js/inline-09-studio.min.js?v=w2.4.1',
   'js/student-study-stub.min.js?v=w1-1',
   'js/workbench-nav.min.js?v=w4-1',
   'js/plan.min.js?v=w2-2',
