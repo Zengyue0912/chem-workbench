@@ -239,8 +239,10 @@ function customInput() {
   return card('第 1 步', '先把题目放进来', `
     <label class="study-field">题目文字<textarea id="studyQuestion" aria-describedby="studyImageHelp" rows="3" maxlength="2000" placeholder="粘贴题干，或按 Ctrl+V 粘贴截图">${escape(draft.question)}</textarea></label>
     <div id="studyImagePanel" class="study-image-panel">${imagePanel()}</div>
-    <p class="study-note">工作台会按题目给的条件和每一问的要求，帮你找对应的解题步骤。</p>
-    <div class="study-actions"><button type="button" class="btn-main" data-study-action="start-custom" ${draft.image?.controller ? 'disabled' : ''}>分析这道题</button>
+    <p class="study-note">「分步解题」会一步一步算给你看，每步都能问为什么；「拍照解题」拍题自动识别。</p>
+    <div class="study-actions"><button type="button" class="btn-main" data-study-action="solve-step" ${draft.image?.controller ? 'disabled' : ''}>分步解题</button>
+      <button type="button" class="btn-sub" data-study-action="solve-photo">拍照解题</button>
+      <button type="button" class="btn-sub" data-study-action="start-custom" ${draft.image?.controller ? 'disabled' : ''}>只看解题步骤</button>
       ${vsepr.practicePending() ? button('继续做构型变式','review-vsepr') : ''}</div>`, 'study-custom-input');
 }
 
@@ -297,6 +299,7 @@ function refreshImagePanel() {
   if (!panel) return;
   const activeAction = panel.contains(document.activeElement) && document.activeElement.dataset.studyAction;
   panel.innerHTML = imagePanel();
+  $('study-custom-input').querySelector('[data-study-action="solve-step"]').disabled = !!draft.image?.controller;
   $('study-custom-input').querySelector('[data-study-action="start-custom"]').disabled = !!draft.image?.controller;
   if (activeAction) (panel.querySelector('[data-study-action="' + activeAction + '"]') || $('studyQuestion'))?.focus();
 }
@@ -962,6 +965,24 @@ function analyzeCustomQuestion() {
   return openPreparedPart(0);
 }
 
+/* v2.2.1：新版分步解题入口（引擎计算 + 分步交互）。新模块不可用时回退旧流程。 */
+function startStepSolve() {
+  const q = (draft.question || '').trim();
+  if (!q) return;
+  if (window.ChemSolveFlow && typeof window.ChemSolveFlow.start === 'function') {
+    try { window.ChemSolveFlow.start(q, { source: 'study' }); return; }
+    catch (e) { /* 回退旧流程 */ }
+  }
+  analyzeCustomQuestion();
+}
+function startPhotoSolve() {
+  if (window.ChemSolveOCR && typeof window.ChemSolveOCR.openPhotoSolve === 'function') {
+    try { window.ChemSolveOCR.openPhotoSolve(); return; }
+    catch (e) { /* 回退：聚焦题目框，提示粘贴截图 */ }
+  }
+  $('studyQuestion')?.focus();
+}
+
 async function askModel(control) {
   if (mode !== 'lesson' || !modelReady || request) return;
   const controller = new AbortController();
@@ -1103,6 +1124,8 @@ document.addEventListener('click', event => {
     draft.imageNotice = '已移除原图，题目框里的文字仍可修改。';
     return refreshImagePanel();
   }
+  if (studyAction === 'solve-step' && !draft.image?.controller && hasQuestion()) return startStepSolve();
+  if (studyAction === 'solve-photo') return startPhotoSolve();
   if (studyAction === 'start-custom' && !draft.image?.controller && hasQuestion()) return analyzeCustomQuestion();
   if (studyAction === 'correct-vsepr') {
     const correction = draft.questionReading?.correction;

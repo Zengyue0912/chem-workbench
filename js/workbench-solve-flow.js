@@ -1846,6 +1846,11 @@ function handleAction(action, el) {
       S.view = 'diagnose';
       ensurePanel(); render(); openPanel();
       return;
+    case 'open-ask': /* v2.2.1：助教抽屉的分步解题主入口，打开题目输入视图。 */
+      S = newSession(null, {});
+      S.view = 'ask';
+      ensurePanel(); render(); openPanel();
+      return;
     case 'start-ask': {
       var ta = $('wbsQuestionInput');
       var q = trim((ta ? ta.value : '') || S.questionInput || '');
@@ -2022,15 +2027,15 @@ function onDocKeydown(e) {
 
 /* ---------- 助教抽屉入口（solve 模式内显示，事件委托挂载） ---------- */
 function updateDrawerBtnVisibility() {
-  var b = document.querySelector('[data-wbs-drawer-btn]');
-  if (!b) return;
+  var btns = document.querySelectorAll('[data-wbs-drawer-btn]');
+  if (!btns.length) return;
   var show = true;
   try {
     if (window.ChemSocratic && typeof window.ChemSocratic.getMode === 'function') {
       show = window.ChemSocratic.getMode() === 'solve';
     }
   } catch (e) { /* 苏格拉底模块不可用时默认显示 */ }
-  b.style.display = show ? '' : 'none';
+  for (var k = 0; k < btns.length; k++) btns[k].style.display = show ? '' : 'none';
 }
 function injectDrawerButton(attempt) {
   var quick = $('caQuick');
@@ -2047,6 +2052,15 @@ function injectDrawerButton(attempt) {
   b.textContent = '帮我找错：诊断我的解题过程';
   b.title = '粘贴你的解题过程（每行一步），按规则逐行检查常见错误';
   quick.parentNode.insertBefore(b, quick.nextSibling);
+  /* v2.2.1：助教抽屉里同时给出分步解题主入口，否则新解题面板没有可见入口。 */
+  var b2 = document.createElement('button');
+  b2.type = 'button';
+  b2.className = 'btn-main wbs-drawer-btn';
+  b2.setAttribute('data-wbs-drawer-btn', '1');
+  b2.setAttribute('data-wbs-action', 'open-ask');
+  b2.textContent = '打开分步解题';
+  b2.title = '输入题目，一步一步算给你看';
+  quick.parentNode.insertBefore(b2, b.nextSibling);
   updateDrawerBtnVisibility();
 }
 

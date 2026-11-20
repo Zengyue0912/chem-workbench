@@ -53,7 +53,7 @@ var BUNDLES = {
          'js/student-ionic-sop.min.js',
          'js/student-method-flow.min.js',
          'js/student-question-ocr.min.js',
-         'js/student-study.min.js']
+         'js/student-study.min.js?v=w2.2.1']
   },
   spatial: {
     css: ['css/chem-spatial.min.css'],

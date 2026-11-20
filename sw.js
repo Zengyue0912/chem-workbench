@@ -14,7 +14,7 @@
  * ========================================================================== */
 'use strict';
 
-var CACHE_VERSION = 'w5-2';
+var CACHE_VERSION = 'w5-3';
 var CACHE_NAME = 'chem3d-v' + CACHE_VERSION;
 var OFFLINE_URL = 'offline.html';
 
@@ -44,7 +44,7 @@ var PRECACHE_URLS = [
   'css/workbench-fx.min.css?v=w4-1',
   'css/workbench-solve.min.css?v=w5-1',
   'js/auth.min.js?v=w2-2',
-  'js/loader.min.js?v=w1-1',
+  'js/loader.min.js?v=w2.2.1',
   'js/inline-00-e3-engine.min.js?v=w1-1',
   'js/inline-01-db-items.min.js?v=w1-1',
   'js/inline-02-db-app.min.js?v=w1-1',
@@ -74,7 +74,7 @@ var PRECACHE_URLS = [
   'js/workbench-solve-engine.min.js?v=w5-1',
   'js/workbench-chem-render.min.js?v=w5-1',
   'js/workbench-solve-ocr.min.js?v=w5-1',
-  'js/workbench-solve-flow.min.js?v=w5-1',
+  'js/workbench-solve-flow.min.js?v=w5-3',
   'assets/jxnu-emblem.jpg',
   'assets/icon-192.png',
   'assets/icon-512.png'
