@@ -2,7 +2,7 @@
  * 高中化学 3D 考点工作台 — 大模型配置模块测试集（v2.3.0）
  *
  * 运行方法（零依赖，纯 Node 断言，无测试框架）：
- *   cd ~/workspace/chem-workbench/optimized
+ *   cd ~/workspace/chem-workbench/merged
  *   node tests/ai-config.test.js
  *
  * 运行后打印“通过 X/Y”；全部通过时退出码为 0，任一失败时退出码为 1。
@@ -12,7 +12,12 @@
  * ========================================================================== */
 'use strict';
 
-/* ---------- 浏览器环境桩（必须在 require 模块之前装好） ---------- */
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/* ---------- 浏览器环境桩（必须在 import 模块之前装好） ---------- */
 var store = {};
 global.localStorage = {
   getItem: function (k) { return Object.prototype.hasOwnProperty.call(store, k) ? store[k] : null; },
@@ -47,7 +52,9 @@ global.window = {
   alert: function () {}
 };
 
-var AI = require('../js/ai-config.js').ChemAI || global.window.ChemAI;
+/* merged 是 type:module，用动态 import 加载；ai-config 把 API 挂在 window.ChemAI 上。 */
+await import('../public/ai-config.js');
+var AI = global.window.ChemAI;
 
 var passed = 0, total = 0, failures = [];
 function test(name, fn) {
@@ -230,8 +237,7 @@ async function run() {
 
   /* ---------- 安全：源码里不得有真实 Key ---------- */
   await test('源码不含真实 API Key 痕迹', function () {
-    var fs = require('fs');
-    var src = fs.readFileSync(require('path').join(__dirname, '..', 'js', 'ai-config.js'), 'utf-8');
+    var src = fs.readFileSync(path.join(__dirname, '..', 'public', 'ai-config.js'), 'utf-8');
     ok(src.indexOf('sk-') === -1 || src.indexOf("sk-'") !== -1, '源码不得出现 sk- 开头的 Key');
     /* 允许出现 'sk-' 仅作为字符串字面量检查时已在上一行处理；这里直接确认无 sk- 后跟长串的情况 */
     ok(!/sk-[A-Za-z0-9]{8,}/.test(src), '源码不得出现真实 Key 形态');
