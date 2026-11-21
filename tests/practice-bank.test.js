@@ -2,7 +2,7 @@
  * 高中化学 3D 考点工作台 — 同步练习题库与变式生成器测试集（v2.4.0 F 组）
  *
  * 运行方法（零依赖，纯 Node 断言，无测试框架）：
- *   cd ~/workspace/chem-workbench/optimized
+ *   cd ~/workspace/chem-workbench/merged
  *   node tests/practice-bank.test.js
  *
  * 覆盖：
@@ -15,11 +15,11 @@
  *     （详细渲染行为见 tests/practice-analysis.test.js，这里不重复）。
  *
  * 加载办法（与 A 组 tests/practice-analysis.test.js 相同）：
- *  inline-09-studio.js 是浏览器代码，不能直接 require。用 vm 在沙箱里执行：
- *  ChemPracticeCore 纯逻辑 IIFE 单独切片取出；题库数据行、两个分库文件与
- *  mergePracticeBanks 合并 IIFE 在 window 桩沙箱里按真实页面顺序执行
- *  （分库先于 inline-09-studio.js，见 app.html 的 defer 脚本顺序）。
- *  生成器与解题引擎是双环境模块（Node 下 module.exports），直接 require。
+ *  练习核心是 public/index.html 内联块 #9 里的浏览器代码，不能直接 require。
+ *  用 vm 在沙箱里执行：ChemPracticeCore 纯逻辑 IIFE 单独切片取出；题库数据行、
+ *  两个分库文件与 mergePracticeBanks 合并 IIFE 在 window 桩沙箱里按真实页面
+ *  顺序执行（分库的 <script> 标签在块 #9 之前，见 index.html）。
+ *  生成器与解题引擎是双环境模块，用动态 import 加载后从 globalThis 取 API。
  *
  * 引擎重算方法（见 verifyChecks 的注释）：重放题目 _gen.checks 里记录的每一次
  *  引擎调用（方法 + 参数），用引擎重新计算并比对记录值。
@@ -28,14 +28,26 @@
  * 本文件不打包进首屏，不进入 sw.js 预缓存。
  * ========================================================================== */
 'use strict';
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const G = require('../js/workbench-practice-gen.js');
-const E = require('../js/workbench-solve-engine.js');
+/* merged 是 type:module，用动态 import 加载双环境模块（先引擎后生成器，
+   与页面顺序一致）；两者在 Node 下把 API 挂在 globalThis 上。 */
+await import('../public/workbench-solve-engine.js');
+await import('../public/workbench-practice-gen.js');
+const E = globalThis.ChemSolveEngine;
+const G = globalThis.ChemPracticeGen;
 
-const SRC = fs.readFileSync(path.join(__dirname, '..', 'js', 'inline-09-studio.js'), 'utf8');
+/* 合并版布局：练习核心在 public/index.html 的内联块 #9 里（单文件应用）。
+   按注释锚点把该 <script> 块切出来当 SRC；其余切片逻辑与 GitHub 版相同。 */
+const HTML = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+const blockMark = HTML.indexOf('/* Chemistry Studio upgrade');
+const blockStart = HTML.lastIndexOf('<script>', blockMark);
+const blockEnd = HTML.indexOf('</script>', blockMark);
+const SRC = HTML.slice(blockStart, blockEnd);
 const TOPICS = ['物质与反应', '元素及其化合物', '结构与有机', '反应原理', '定量分析', '实验探究'];
 const TYPES = ['single', 'multi', 'fill', 'experiment'];
 const ID_RE = /^[A-Za-z0-9_.-]{1,64}$/;
@@ -54,8 +66,8 @@ const C = coreSandbox.ChemPracticeCore;
 const bankSandbox = { window: null, console };
 bankSandbox.window = bankSandbox;
 vm.createContext(bankSandbox);
-vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'practice-bank-concept.js'), 'utf8'), bankSandbox);
-vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'js', 'practice-bank-exam.js'), 'utf8'), bankSandbox);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'public', 'practice-bank-concept.js'), 'utf8'), bankSandbox);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'public', 'practice-bank-exam.js'), 'utf8'), bankSandbox);
 const dataLine = SRC.split('\n').find(l => l.startsWith('window.CHEM_PRACTICE_DEFAULT='));
 vm.runInContext(dataLine, bankSandbox);
 const DEFAULT_COUNT = bankSandbox.CHEM_PRACTICE_DEFAULT.questions.length;

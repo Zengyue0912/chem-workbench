@@ -1,0 +1,354 @@
+/* The shelf uses original workbench imagery. Covers are styled as library cards. */
+.ct-book {
+  --ct-ink:#213c33;
+  --ct-muted:#4c6155;
+  --ct-line:#d8d9c9;
+  --ct-paper:#fdfbf4;
+  --ct-accent:#285f4b;
+  --ct-pale:#e8eee5;
+  display:grid;
+  gap:19px;
+  color:var(--ct-ink);
+  color-scheme:light;
+}
+.ct-book *,
+.ct-book *::before,
+.ct-book *::after {box-sizing:border-box}
+.ct-book [hidden] {display:none!important}
+.ct-book a {color:inherit;text-decoration:none}
+.ct-book a:focus-visible,
+.ct-book button:focus-visible,
+.ct-book summary:focus-visible,
+.ct-book input:focus-visible,
+.ct-resource-back:focus-visible {outline:2px solid #24747e;outline-offset:3px}
+.ct-book [data-ct-heading]:focus {outline:none}
+.ct-book button,.ct-book summary,.ct-book a,.ct-resource-back {touch-action:manipulation}
+.ct-book h1,.ct-book h2,.ct-book h3,.ct-book p {margin:0}
+.ct-header {display:flex;justify-content:space-between;align-items:end;gap:15px;flex-wrap:wrap}
+.ct-header h1 {font:800 clamp(30px,4vw,53px)/1.15 "Songti SC","SimSun",Georgia,serif;letter-spacing:.02em;color:var(--ct-ink);text-wrap:balance}
+.ct-header p {color:var(--ct-muted);font-size:14px;line-height:1.55;margin-top:8px}
+.ct-header .ct-edition {margin:0 0 5px;font-size:12px;letter-spacing:.1em;font-weight:750;color:var(--ct-accent)}
+.ct-find {position:relative;background:#fffdf8;border:1px solid var(--ct-line);padding:12px 15px;border-radius:8px;display:grid;gap:7px}
+.ct-find:focus-within {border-color:#84a395}
+.ct-find label {font-size:13px;font-weight:750;color:var(--ct-accent)}
+.ct-query-wrap {display:flex;gap:7px}
+.ct-query-wrap input {min-width:0;flex:1;min-height:40px;border:1px solid #bccabb;border-radius:6px;padding:7px 10px;background:#f5f7f0;color:var(--ct-ink);font:inherit}
+.ct-query-wrap input::placeholder {color:#66776d}
+.ct-find ul,.ct-outline ul,.ct-resources ul {margin:0;padding:0;list-style:none}
+.ct-find ul {max-height:279px;overflow:auto}
+.ct-find li+li {border-top:1px solid var(--ct-line)}
+.ct-find li a {display:grid;gap:4px;padding:9px 6px;min-height:45px}
+.ct-find li a:hover {background:var(--ct-pale)}
+.ct-find li span,.ct-result-count {color:var(--ct-muted);font-size:13px}
+.ct-result-count {padding:3px 5px}
+.ct-sr-only {position:absolute;overflow:hidden;clip-path:inset(50%);width:1px;height:1px;white-space:nowrap}
+
+.ct-shelf-hero {
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.34fr);gap:clamp(16px,3.6vw,50px);
+  align-items:center;padding:clamp(14px,2.0vw,28px);
+  background:#f8f6eb;border:1px solid #d9dac9;border-radius:10px;
+}
+.ct-book section:is(.ct-find,.ct-feature,.ct-shelf) {margin-top:0}
+.ct-shelf-intro {display:grid;align-content:center;justify-items:start;gap:14px;min-width:0}
+.ct-shelf-intro .ct-header h1 {font-size:clamp(34px,4.1vw,57px)}
+.ct-shelf-intro .ct-find {width:100%;padding:8px 0;background:transparent;border:0;border-radius:0}
+.ct-shelf-intro .ct-query-wrap input {background:#fffdf5}
+.ct-shelf-intro [data-ct-results]:not([hidden]) {
+  position:absolute;top:100%;left:0;right:0;
+  z-index:5;padding:7px;border:1px solid #c4cdbf;border-radius:6px;background:#fffdf4;
+  box-shadow:0 12px 26px #253c3422;
+}
+.ct-shelf {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(165px,100%),1fr));gap:12px}
+.ct-volume {
+  --ct-jacket:#275447;
+  --ct-spine:#153c33;
+  --ct-well:#dce8dc;
+  --ct-foil:#e8ebba;
+  min-width:0;
+  position:relative;
+  display:grid;
+  grid-template-rows:auto 1fr;
+  overflow:hidden;
+  border:1px solid #cdd3c1;
+  border-radius:8px;
+  background:var(--ct-paper);
+  box-shadow:0 2px #e1dfd0;
+  transition:border-color .2s;
+}
+.ct-volume.ct-required-2 {--ct-jacket:#3a6574;--ct-spine:#1c4556;--ct-well:#dce8eb;--ct-foil:#e7f3ec}
+.ct-volume.ct-selective-1 {--ct-jacket:#8b5942;--ct-spine:#593627;--ct-well:#eee1cf;--ct-foil:#ffe6b5}
+.ct-volume.ct-selective-2 {--ct-jacket:#4d557a;--ct-spine:#363b5d;--ct-well:#e6e6ed;--ct-foil:#ece3f3}
+.ct-volume.ct-selective-3 {--ct-jacket:#556848;--ct-spine:#344734;--ct-well:#e7ead7;--ct-foil:#eff0c8}
+.ct-volume:is(:hover,:focus-visible) {border-color:#8ba190}
+.ct-book-well {
+  position:relative;display:grid;place-items:center;
+  height:170px;perspective:600px;perspective-origin:50% 42%;
+  background:radial-gradient(ellipse at 50% 20%,#fdfbf1 5%,var(--ct-well) 86%);
+  border-bottom:1px solid #d4dccb;
+}
+.ct-book-well::before {
+  content:"";position:absolute;left:14%;right:14%;bottom:12%;
+  height:18%;border-radius:50%;background:#37433a38;filter:blur(9px);
+}
+.ct-book-object {
+  --ct-block-depth:16px;
+  position:relative;width:clamp(74px,7.1vw,105px);aspect-ratio:.75;
+  transform:translate3d(-3px,0,0) rotateX(17deg) rotateY(-25deg) rotateZ(-8deg);
+  transform-style:preserve-3d;
+  transition:transform .48s cubic-bezier(.2,.74,.24,1);
+}
+.ct-book-back,.ct-book-page,.ct-book-cover {position:absolute;inset:0}
+.ct-book-back {
+  background:var(--ct-spine);border-radius:2px 4px 4px 2px;
+  transform:translateZ(calc(var(--ct-block-depth) * -.5));
+}
+.ct-book-page {
+  inset:3px 2px 3px 4px;display:flex;flex-direction:column;gap:4px;overflow:hidden;
+  padding:12px 6px 8px;color:#4b5945;font:10px/1.35 "Microsoft YaHei",sans-serif;
+  background:linear-gradient(90deg,#d8d1b8,#fbf3da 20%);
+  transform:translateZ(calc(var(--ct-block-depth) * .5 - .5px));
+}
+.ct-book-page span {font-size:12px;font-weight:800}
+.ct-book-page p {margin:0}
+.ct-book-page i {height:1px;width:87%;background:#b2b09c}
+.ct-book-page i:last-child {width:68%}
+.ct-book-fore,.ct-book-heel {
+  position:absolute;display:block;transform-style:preserve-3d;
+  background:repeating-linear-gradient(90deg,#e7dabe 0px 1px,#fff4db 1px 2px);
+}
+.ct-book-fore {
+  top:3px;bottom:3px;left:calc(100% - 2px);width:var(--ct-block-depth);
+  transform-origin:left center;transform:translateZ(calc(var(--ct-block-depth) * .5)) rotateY(90deg);
+}
+.ct-book-heel {
+  bottom:0;left:4px;right:2px;height:var(--ct-block-depth);
+  transform-origin:center bottom;
+  transform:translateY(-2px) translateZ(calc(var(--ct-block-depth) * .5)) rotateX(90deg);
+  background:repeating-linear-gradient(0deg,#d8cbaf 0px 1px,#f0e5ca 1px 2px);
+}
+.ct-book-cover {
+  transform-origin:left center;transform-style:preserve-3d;
+  transform:translateZ(calc(var(--ct-block-depth) * .5)) rotateY(0deg);
+  transition:transform .48s cubic-bezier(.2,.74,.24,1);
+}
+.ct-book-face {
+  position:absolute;inset:0;border-radius:2px 4px 4px 2px;backface-visibility:hidden;
+}
+.ct-book-front {
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:4px;
+  padding:18px 5px 13px 10px;text-align:center;
+  background:linear-gradient(90deg,var(--ct-spine) 0 7%,#fff4 8%,transparent 10%),
+    linear-gradient(135deg,#ffffff1f,transparent 60%,#10232154),var(--ct-jacket);
+  border:1px solid #07291c28;color:var(--ct-foil);
+}
+.ct-book-front::after {position:absolute;inset:8px 7px 7px 13px;border:1px solid #fff4;content:"";pointer-events:none}
+.ct-book-front span {font-size:clamp(9px,.75vw,12px);font-weight:800}
+.ct-book-front strong {font:650 clamp(20px,2.15vw,34px)/1 Georgia,serif;padding-bottom:10px}
+.ct-book-inside {
+  transform:rotateY(180deg);
+  background:linear-gradient(90deg,#d0c7a8,#f2e8ca 52%,#f2e6c6);border:1px solid #a9a487;
+}
+@media(hover:hover) and (pointer:fine) {
+  .ct-volume:hover .ct-book-object {transform:translate3d(8px,-5px,0) rotateX(15deg) rotateY(-14deg) rotateZ(-5deg)}
+  .ct-volume:hover .ct-book-cover {transform:translateZ(calc(var(--ct-block-depth) * .5)) rotateY(-65deg)}
+}
+.ct-volume:focus-visible .ct-book-cover {transform:translateZ(calc(var(--ct-block-depth) * .5)) rotateY(-65deg)}
+.ct-volume.ct-opening .ct-book-object {transform:translate3d(31px,-5px,0) rotateX(19deg) rotateY(-7deg) rotateZ(-5deg)}
+.ct-volume.ct-opening .ct-book-cover {transform:translateZ(calc(var(--ct-block-depth) * .5)) rotateY(-153deg)}
+.ct-volume-copy {display:flex;align-items:start;flex-direction:column;gap:6px;padding:13px 11px 12px 13px}
+.ct-volume-copy>span:first-child {font-weight:750;color:var(--ct-muted);font-size:12px}
+.ct-volume-copy h2 {font:750 clamp(16px,1.45vw,22px)/1.23 "Songti SC","SimSun",Georgia,serif;color:var(--ct-ink)}
+.ct-volume-copy p {font-size:13px;line-height:1.5;color:var(--ct-muted)}
+.ct-read {margin-top:auto;padding-top:6px;font-size:13px;font-weight:750;color:var(--ct-accent)}
+.ct-feature {overflow:hidden;border:1px solid #bdc9b8;border-radius:8px;background:#fefcf4;min-width:0}
+.ct-preview-stage {
+  position:relative;height:clamp(185px,24vw,262px);overflow:hidden;
+  background:radial-gradient(ellipse at 47% 35%,#edf0df 8%,#dfe8d9 63%,#b5c8b9);
+}
+.ct-preview-stage img {width:100%;height:100%;display:block;object-fit:contain}
+.ct-preview-canvas {position:absolute;inset:0;touch-action:pan-y}
+.ct-preview-canvas canvas {display:block;width:100%;height:100%;cursor:grab;touch-action:pan-y}
+.ct-preview-canvas canvas:active {cursor:grabbing}
+.ct-preview-mode {
+  position:absolute;left:8px;bottom:8px;font-size:11px;font-weight:700;color:#325647;
+  padding:4px 6px;background:#f8fbefe8;border:1px solid #c1cebe;border-radius:5px;pointer-events:none;
+}
+.ct-preview-controls {display:flex;flex-wrap:wrap;gap:4px;padding:5px 8px 0}
+.ct-preview-controls button {
+  border:1px solid #c5cec0;background:#fbfbf2;color:#2e5748;min-height:33px;border-radius:5px;
+  padding:4px 7px;font:inherit;font-weight:650;font-size:12px;cursor:pointer;
+}
+.ct-preview-controls button:hover {background:#e7eee2}
+.ct-preview-controls button:disabled {opacity:.5;cursor:default}
+.ct-feature-copy {display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;padding:8px 9px 10px}
+.ct-feature h2 {font:750 25px/1.2 "Songti SC","SimSun",Georgia,serif}
+.ct-primary,.ct-secondary,.ct-resource-back {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  min-height:38px;
+  padding:6px 11px;
+  border:1px solid #bccbbc;
+  border-radius:5px;
+  background:#fffdf6;
+  color:#245342;
+  font-size:13px;
+  font-weight:700;
+  line-height:1.25;
+  text-decoration:none;
+}
+.ct-book a.ct-primary {color:#fff;background:var(--ct-accent);border-color:var(--ct-accent)}
+.ct-book a.ct-primary:hover {background:#174632}
+.ct-book a.ct-secondary:hover,
+a.ct-secondary:hover,
+a.ct-resource-back:hover {background:#e8eee5;color:#234b3c}
+.ct-legacy {padding:9px 13px;border:1px solid var(--ct-line);border-radius:7px;background:var(--ct-paper)}
+.ct-legacy summary,.ct-outline summary {cursor:pointer;font-weight:750}
+.ct-legacy summary {padding:6px 0}
+.ct-foot {display:flex;align-items:center;gap:8px 15px;flex-wrap:wrap;font-size:12px;color:var(--ct-muted)}
+.ct-foot a,.ct-bread {font-weight:750;text-decoration:underline;text-underline-offset:3px}
+
+.ct-breadcrumb {display:flex;align-items:center;flex-wrap:wrap;gap:7px;font-size:13px;color:var(--ct-muted)}
+.ct-inline-top {
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;
+  border-bottom:1px solid #d9ddcf;padding-bottom:9px;
+}
+.ct-book:has(.ct-inline-top) {gap:12px}
+.ct-inline-directory {position:relative;z-index:4}
+.ct-inline-directory summary {cursor:pointer}
+.ct-inline-directory summary::after {content:'▾';font-size:10px}
+.ct-inline-directory[open] summary::after {content:'▴'}
+.ct-inline-directory .ct-outline {
+  position:absolute;right:0;top:calc(100% + 5px);
+  width:min(76vw,355px);height:auto;max-height:min(62vh,460px);overflow:auto;
+  border:1px solid #c8d3c2;border-radius:7px;box-shadow:0 10px 24px #213d3230;
+}
+.ct-inline-spread {position:relative;min-width:0}
+.ct-inline-spread>.ct-turn-sheet {border-radius:8px;z-index:3}
+.ct-inline-spread chemistry-book[embedded] {width:100%}
+#cwBook .ct-inline-spread .cb-header {margin:0 0 10px}
+.ct-inbook-heading .ct-location {color:#776245;font-size:13px;font-weight:700;margin-bottom:3px}
+.ct-inbook-heading h2 {
+  font:800 clamp(28px,3.5vw,50px)/1.12 "Songti SC","SimSun",Georgia,serif;
+  color:var(--ct-ink);text-wrap:balance;
+}
+.ct-inbook-heading .ct-page {margin-top:4px;color:var(--ct-muted);font-size:13px}
+.ct-inline-spread chemistry-book[embedded] .cb-spread {grid-template-columns:minmax(240px,1fr) minmax(0,2.22fr)}
+.ct-inline-spread chemistry-book[embedded].cb-hide-notes .cb-spread {grid-template-columns:minmax(0,1fr)}
+.ct-inline-spread .cb-left {background:linear-gradient(90deg,#fbf7ec 0%,#fbf8ef 89%,#e9dfc7 100%)}
+.ct-inline-spread .cb-right {background:linear-gradient(90deg,#faf6e9,#fffdf4 8%)}
+.ct-inline-spread .cb-stage-shell {
+  height:clamp(265px,34dvh,410px);
+  min-height:255px;
+  background:radial-gradient(ellipse at 50% 40%,#fbf8e8,#ede8d4 78%,#d8d6bd 100%);
+}
+.ct-inline-spread .cb-opened .cb-stage-shell {
+  background:radial-gradient(ellipse at 51% 38%,#f1f2e4 2%,#e5ebdd 69%,#bdc9b9);
+}
+.ct-inline-spread .cb-illustration-trigger {
+  position:absolute;bottom:13px;left:50%;transform:translateX(-50%);
+  min-height:41px;white-space:nowrap;
+  box-shadow:0 3px 10px #21383732;
+}
+.ct-inline-spread .cb-intro {justify-content:flex-start}
+.ct-inbook-reading {margin-top:12px;padding-top:8px;border-top:1px solid #d7d3bf}
+.ct-inbook-reading summary {font-weight:750;color:#285342;cursor:pointer;padding:4px 0}
+.ct-inbook-reading .ct-key-points {margin:9px 0 2px}
+.ct-inbook-reading .ct-key-point {
+  grid-template-columns:minmax(0,1fr);gap:2px;padding:5px 7px;
+}
+.ct-inbook-reading .ct-key-point dd {font-size:13px}
+.ct-inline-footer {display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px}
+.ct-inline-footer .ct-resources {flex:1;min-width:min(100%,280px)}
+.ct-book .ct-inline-footer .ct-resources {margin-top:0}
+.ct-inline-footer .ct-page-turns {margin-top:0}
+.ct-chapter-head {margin-top:-6px}
+.ct-chapter-head .ct-book-isbn {font:13px/1.4 system-ui,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+.ct-head-actions {display:flex;flex-wrap:wrap;gap:6px}
+.ct-spread {display:grid;align-items:start;grid-template-columns:minmax(225px,.95fr) minmax(0,1.75fr);overflow:hidden;border:1px solid var(--ct-line);border-radius:9px;background:var(--ct-paper);box-shadow:0 3px #dfddcf}
+.ct-outline {background:#edf1e9;border-right:1px solid var(--ct-line);padding:13px 12px 15px;min-width:0;height:100%}
+.ct-outline h2 {font-size:15px;margin:0 4px 9px;color:var(--ct-ink)}
+.ct-outline details {border-top:1px solid #d2dbd0}
+.ct-outline summary {padding:11px 5px;color:#2c4c3e;font-size:13px;line-height:1.4}
+.ct-outline summary:hover {background:#e4ece1}
+.ct-outline ul {padding:0 2px 4px}
+.ct-outline a {display:flex;justify-content:space-between;gap:9px;padding:8px 9px;border-radius:4px;font-size:13px;line-height:1.42}
+.ct-outline a:hover {background:#e0e9de}
+.ct-outline a[aria-current=page] {background:#d3e4d8;color:#174834;font-weight:750;box-shadow:inset 2px 0 #31775e}
+.ct-outline a small {color:var(--ct-muted);font-size:11px;flex-shrink:0;font-variant-numeric:tabular-nums}
+.ct-lesson {position:relative;min-width:0;padding:clamp(17px,2.7vw,37px);background:linear-gradient(90deg,#e9e3d2 0%,#fbf8ee 2.5%,#fdfbf4 10%)}
+.ct-turn-sheet {
+  position:absolute;inset:0;z-index:2;pointer-events:none;opacity:0;
+  transform-origin:left center;
+  background:linear-gradient(90deg,#d5c9ac 0,#f6eed8 6%,#fffbed 38%,#eee4cb 100%);
+  box-shadow:9px 0 18px #4c4a342b;
+  animation:ct-page-turn .64s cubic-bezier(.35,.14,.27,1) both;
+}
+@keyframes ct-page-turn {
+  0% {transform:perspective(1050px) rotateY(0deg);opacity:1}
+  52% {opacity:.95}
+  100% {transform:perspective(1050px) rotateY(-148deg);opacity:0}
+}
+.ct-lesson .ct-location {color:#726245;font-size:13px;font-weight:750;margin-bottom:7px;line-height:1.45}
+.ct-lesson h2 {font:800 clamp(25px,3.1vw,42px)/1.19 "Songti SC","SimSun",Georgia,serif;line-break:strict;text-wrap:balance;color:var(--ct-ink)}
+.ct-lesson .ct-page {margin-top:9px;font-size:14px;color:var(--ct-muted)}
+.ct-page span {margin-left:5px;color:#6e7668;font-size:12px}
+.ct-reading {margin:18px 0;padding:13px 15px;border-left:3px solid #66917d;background:#eef1e6;border-radius:0 5px 5px 0}
+.ct-lesson h3 {font-size:15px;line-height:1.36;color:var(--ct-ink);margin-bottom:6px}
+.ct-reading p {color:#324b3d;line-height:1.7;font-size:15px;max-width:50ch}
+.ct-key-points {margin:19px 0 20px}
+.ct-key-points>h3 {font-size:17px;margin-bottom:9px}
+.ct-key-points dl {margin:0;display:grid;gap:6px}
+.ct-key-point {
+  --ct-point:#246048;
+  --ct-point-rail:#76a88a;
+  --ct-point-tint:#edf4e9;
+  display:grid;
+  grid-template-columns:auto minmax(0,1fr);
+  align-items:baseline;
+  gap:6px 11px;
+  padding:9px 12px;
+  border-inline-start:3px solid var(--ct-point-rail);
+  border-radius:0 5px 5px 0;
+  background:var(--ct-point-tint);
+}
+.ct-key-point--method {--ct-point:#255985;--ct-point-rail:#7da5ca;--ct-point-tint:#edf3fa}
+.ct-key-point--trap {--ct-point:#91451e;--ct-point-rail:#cb946f;--ct-point-tint:#fbefe3}
+.ct-key-point dt {font-size:13px;font-weight:800;color:var(--ct-point);white-space:nowrap}
+.ct-key-point dd {margin:0;color:#2b3a34;font-size:15px;line-height:1.64;overflow-wrap:anywhere}
+.ct-key-point strong {font-weight:800;color:var(--ct-point)}
+.ct-resources li a {min-height:44px;display:grid;grid-template-columns:5em 1fr auto;align-items:center;gap:8px;padding:8px 3px;border-bottom:1px solid #e0e4d8;font-size:14px;line-height:1.4}
+.ct-resources li a:hover {background:#edf1e6}
+.ct-resource-kind {color:#486e5d;font-size:12px}
+.ct-no-resources {color:var(--ct-muted);font-size:13px;line-height:1.53}
+.ct-page-turns {display:flex;justify-content:space-between;gap:6px;margin-top:18px}
+.ct-resource-back {margin:0 0 10px}
+#viewPT>.ct-resource-back {margin:10px 12px 0}
+@media(max-width:940px) {
+  .ct-shelf {grid-template-columns:repeat(auto-fit,minmax(min(145px,100%),1fr))}
+  .ct-spread {grid-template-columns:minmax(178px,.85fr) minmax(0,1.45fr)}
+  .ct-shelf-hero {gap:15px}
+  .ct-book-well {height:146px}
+  .ct-inline-spread chemistry-book[embedded] .cb-spread {grid-template-columns:minmax(200px,.91fr) minmax(0,1.76fr)}
+}
+@media(max-width:630px) {
+  .ct-book {gap:14px}
+  .ct-header {align-items:start;gap:9px}
+  .ct-header h1 {font-size:34px}
+  .ct-spread {display:flex;flex-direction:column-reverse}
+  .ct-lesson,.ct-outline {width:100%}
+  .ct-outline {border-right:0;border-top:1px solid var(--ct-line)}
+  .ct-lesson {background:var(--ct-paper)}
+  .ct-key-point {grid-template-columns:minmax(0,1fr);gap:3px;padding:8px 10px}
+  .ct-shelf-hero {grid-template-columns:minmax(0,1fr)}
+  .ct-shelf-intro {gap:7px}
+  .ct-shelf-intro .ct-header h1 {font-size:34px}
+  .ct-preview-stage {height:200px}
+  .ct-inline-spread chemistry-book[embedded] .cb-spread {grid-template-columns:minmax(0,1fr)}
+  .ct-inline-directory .ct-outline {right:auto;left:0}
+}
+@media(prefers-reduced-motion:reduce) {
+  .ct-volume,.ct-book-cover,.ct-book-object {transition:none}
+  .ct-turn-sheet {display:none;animation:none}
+}

@@ -1,0 +1,268 @@
+/* ============================================================================
+ * 高中化学 3D 考点工作台 — 视觉升级覆盖层（工作流 3）
+ * 只做加法：不修改 W1 的 5 个 CSS 源码；本文件在 inline-head.css 之后加载。
+ * 内容：设计 token（CSS 变量，浅/深两套）、间距与圆角阴影微调、
+ * 空状态/错误状态样式、焦点可见样式、安装横幅与分享按钮样式。
+ * 品牌：青绿色 #0e6b57 / #14b8a6；深色模式沿用 body[data-theme="dark"]。
+ * ========================================================================== */
+
+/* ---------- 设计 Token ---------- */
+:root {
+  /* 品牌（与 W1 变量对齐，供新组件使用，不覆盖原变量） */
+  --chem-brand: #0e6b57;
+  --chem-brand-deep: #0a5041;
+  --chem-brand-soft: #14b8a6;
+  --chem-brand-tint: #e6faf6;
+  --chem-brand-line: #cdeee7;
+  --chem-on-brand: #ffffff;
+
+  /* 间距 */
+  --chem-space-1: 4px;
+  --chem-space-2: 8px;
+  --chem-space-3: 12px;
+  --chem-space-4: 16px;
+  --chem-space-5: 20px;
+  --chem-space-6: 24px;
+  --chem-space-8: 32px;
+
+  /* 圆角 */
+  --chem-radius-sm: 6px;
+  --chem-radius-md: 10px;
+  --chem-radius-lg: 14px;
+  --chem-radius-xl: 18px;
+  --chem-radius-full: 999px;
+
+  /* 阴影（青绿 tinted，区别于纯灰阴影） */
+  --chem-shadow-sm: 0 1px 4px rgba(14, 107, 87, .08);
+  --chem-shadow-md: 0 4px 16px rgba(14, 107, 87, .10);
+  --chem-shadow-lg: 0 12px 32px rgba(14, 107, 87, .16);
+  --chem-shadow-lift: 0 8px 24px rgba(14, 107, 87, .18);
+
+  /* 状态色（与 W1 变量对齐） */
+  --chem-success: #16a34a;
+  --chem-warning: #d97706;
+  --chem-danger: #dc2626;
+
+  /* 动效 */
+  --chem-ease: cubic-bezier(.22, .61, .36, 1);
+  --chem-dur-fast: .15s;
+  --chem-dur-base: .25s;
+}
+
+/* 深色模式：token 对应值（沿用 W1 的 [data-theme="dark"] 机制） */
+[data-theme="dark"] {
+  --chem-brand: #3ecfae;
+  --chem-brand-deep: #5eead4;
+  --chem-brand-soft: #2dd4bf;
+  --chem-brand-tint: #0f2a24;
+  --chem-brand-line: #1d3a32;
+  --chem-on-brand: #062a22;
+  --chem-shadow-sm: 0 1px 4px rgba(0, 0, 0, .35);
+  --chem-shadow-md: 0 4px 16px rgba(0, 0, 0, .4);
+  --chem-shadow-lg: 0 12px 32px rgba(0, 0, 0, .5);
+  --chem-shadow-lift: 0 8px 24px rgba(0, 0, 0, .55);
+  --chem-success: #4ade80;
+  --chem-warning: #fbbf24;
+  --chem-danger: #f87171;
+}
+
+/* ---------- 卡片与面板：统一圆角 / 阴影 / 悬停 ---------- */
+.home-shortcut,
+.arcade-card,
+.wb-paper,
+.teach-paper,
+.lsop-document,
+.lesson-flow,
+.lsop-progress,
+.energy-panel,
+.quiz-dialog,
+.ptdlg,
+.chem-assistant {
+  border-radius: var(--chem-radius-lg);
+  box-shadow: var(--chem-shadow-sm);
+}
+.home-shortcut:hover,
+.arcade-card:hover {
+  box-shadow: var(--chem-shadow-lift);
+  transform: translateY(-3px);
+  transition: transform var(--chem-dur-base) var(--chem-ease),
+    box-shadow var(--chem-dur-base) var(--chem-ease),
+    border-color var(--chem-dur-base) var(--chem-ease);
+}
+
+/* 按钮：统一圆角与按压反馈（不改配色，只统一形态） */
+.home-start button,
+.lsop-tools button,
+.lf-actions button,
+.wb-filters button,
+.pt-mini,
+.pt-tab {
+  border-radius: var(--chem-radius-md);
+  transition: background-color var(--chem-dur-fast) var(--chem-ease),
+    box-shadow var(--chem-dur-fast) var(--chem-ease),
+    transform var(--chem-dur-fast) var(--chem-ease);
+}
+.home-start button:active,
+.lsop-tools button:active,
+.lf-actions button:active,
+.wb-filters button:active,
+.pt-mini:active {
+  transform: scale(.97);
+}
+
+/* 输入框：统一聚焦环 */
+.searchbox input:focus,
+.pt-q input:focus,
+.wb-filters input:focus,
+.wb-filters select:focus,
+.lsop-settings input:focus,
+.lsop-settings select:focus {
+  border-color: var(--chem-brand-soft);
+  box-shadow: 0 0 0 3px rgba(20, 184, 166, .18);
+  outline: none;
+}
+
+/* 搜索下拉 / 工具条：统一阴影层级 */
+.search-drop { box-shadow: var(--chem-shadow-lg); border-radius: var(--chem-radius-md); }
+.toolbar { border-radius: var(--chem-radius-md); }
+
+/* ---------- 空状态 ---------- */
+.chem-empty {
+  text-align: center;
+  padding: var(--chem-space-8) var(--chem-space-4);
+  border: 1px dashed var(--chem-brand-line);
+  border-radius: var(--chem-radius-lg);
+  background: var(--chem-brand-tint);
+  color: var(--text2);
+}
+.chem-empty-icon {
+  font-size: 34px; line-height: 1; margin-bottom: var(--chem-space-3);
+  filter: saturate(.7);
+}
+.chem-empty-title {
+  font-size: 15px; font-weight: 600; color: var(--text);
+  margin: 0 0 var(--chem-space-1);
+}
+.chem-empty-text { font-size: 13px; line-height: 1.8; margin: 0; }
+.chem-empty-action { margin-top: var(--chem-space-4); }
+.chem-empty-action button {
+  font: inherit; font-size: 13px; min-height: 40px; padding: 0 18px;
+  border: 0; border-radius: var(--chem-radius-md);
+  background: var(--chem-brand); color: var(--chem-on-brand); cursor: pointer;
+}
+
+/* ---------- 错误状态 ---------- */
+.chem-error {
+  padding: var(--chem-space-4) var(--chem-space-5);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--chem-danger);
+  border-radius: var(--chem-radius-md);
+  background: var(--danger-bg);
+  color: var(--text);
+  font-size: 13px; line-height: 1.8;
+}
+.chem-error-title { font-weight: 600; margin: 0 0 2px; }
+.chem-error-text { margin: 0; color: var(--text2); }
+.chem-error-actions { margin-top: var(--chem-space-3); display: flex; gap: var(--chem-space-2); flex-wrap: wrap; }
+.chem-error-actions button {
+  font: inherit; font-size: 12px; min-height: 36px; padding: 0 14px;
+  border: 1px solid var(--border); border-radius: var(--chem-radius-sm);
+  background: var(--card); color: var(--text); cursor: pointer;
+}
+.chem-error-actions button.chem-error-retry {
+  background: var(--chem-brand); border-color: var(--chem-brand); color: var(--chem-on-brand);
+}
+
+/* 内联提示（成功 / 警告） */
+.chem-notice {
+  padding: var(--chem-space-3) var(--chem-space-4);
+  border-radius: var(--chem-radius-md);
+  font-size: 13px; line-height: 1.8;
+  border: 1px solid var(--border); background: var(--accent-bg); color: var(--text);
+}
+.chem-notice.chem-notice-ok { background: var(--ok-bg); color: var(--ok-tx); }
+.chem-notice.chem-notice-warn { background: var(--warn-bg); color: var(--warn-tx); }
+
+/* ---------- 焦点可见（无障碍，配套 js/a11y.js） ---------- */
+:focus-visible {
+  outline: 2px solid var(--chem-brand-soft);
+  outline-offset: 2px;
+  border-radius: var(--chem-radius-sm);
+}
+/* 鼠标点击不显示轮廓，键盘 Tab 才显示（现代浏览器 :focus-visible 已区分；
+   这里兜底：非键盘焦点去掉默认 outline，避免双重描边） */
+:focus:not(:focus-visible) { outline: none; }
+
+/* 跳过链接：平时隐藏，键盘聚焦时出现（由 js/a11y.js 运行时注入） */
+.chem-skip-link {
+  position: fixed; left: 12px; top: -60px; z-index: 200;
+  padding: 10px 18px; min-height: 44px;
+  background: var(--chem-brand); color: var(--chem-on-brand);
+  font-size: 14px; text-decoration: none;
+  border-radius: 0 0 var(--chem-radius-md) var(--chem-radius-md);
+  box-shadow: var(--chem-shadow-lg);
+  transition: top var(--chem-dur-fast) var(--chem-ease);
+}
+.chem-skip-link:focus { top: 0; outline: 2px solid var(--chem-on-brand); outline-offset: -2px; }
+
+/* 仅供读屏的隐藏文本 */
+.chem-sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
+
+/* ---------- PWA 安装横幅（由 js/pwa.js 运行时注入） ---------- */
+.chem-install-banner {
+  position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 130;
+  display: flex; align-items: center; gap: var(--chem-space-3);
+  padding: var(--chem-space-3) var(--chem-space-4);
+  background: var(--card); color: var(--text);
+  border: 1px solid var(--border); border-radius: var(--chem-radius-lg);
+  box-shadow: var(--chem-shadow-lg);
+  animation: chem-banner-in var(--chem-dur-base) var(--chem-ease) both;
+}
+@keyframes chem-banner-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.chem-install-banner img {
+  width: 40px; height: 40px; border-radius: var(--chem-radius-md); flex: none;
+}
+.chem-install-banner-text { flex: 1; min-width: 0; }
+.chem-install-banner-text strong { display: block; font-size: 14px; }
+.chem-install-banner-text span { font-size: 12px; color: var(--text2); }
+.chem-install-banner button {
+  font: inherit; font-size: 13px; min-height: 40px; padding: 0 16px; flex: none;
+  border-radius: var(--chem-radius-md); cursor: pointer;
+}
+.chem-install-banner .chem-install-go {
+  border: 0; background: var(--chem-brand); color: var(--chem-on-brand);
+}
+.chem-install-banner .chem-install-no {
+  border: 1px solid var(--border); background: transparent; color: var(--text2);
+}
+@media (min-width: 769px) {
+  .chem-install-banner { left: auto; right: 20px; bottom: 20px; width: 380px; }
+}
+
+/* ---------- 分享按钮（供协调员在页面中放置 data-share 按钮时复用） ---------- */
+.chem-share-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  font: inherit; font-size: 13px; min-height: 40px; padding: 0 16px;
+  border: 1px solid var(--border); border-radius: var(--chem-radius-md);
+  background: var(--card); color: var(--text); cursor: pointer;
+}
+.chem-share-btn.chem-share-primary {
+  background: var(--chem-brand); border-color: var(--chem-brand); color: var(--chem-on-brand);
+}
+
+/* ---------- 减少动态效果偏好 ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .home-shortcut, .arcade-card,
+  .home-start button, .lsop-tools button, .lf-actions button,
+  .chem-install-banner {
+    animation: none !important;
+    transition: none !important;
+  }
+  .home-shortcut:hover, .arcade-card:hover { transform: none; }
+}

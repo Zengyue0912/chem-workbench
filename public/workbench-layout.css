@@ -1,0 +1,164 @@
+/* ============================================================================
+ * 高中化学 3D 考点工作台 — B 组：布局截断修复 + 对比度 + 左侧导航（工作流 4）
+ * 配套脚本：js/workbench-nav.js。
+ *
+ * 全部是覆盖层规则（本文件在 inline-head.min.css 之后、enhance.min.css 之前
+ * 加载，同等优先级下后来居上；不改动 inline-head.css 源码）。
+ * 范围：① 可滚动区截断提示 ② 周期表/详情弹窗截断与字号 ③ 深浅色对比度
+ * token ④ 左侧导航折叠/滚动/掌握状态。3D 预览、动效、测验、搜索、移动端
+ * 布局均不在本文件处理（A / C 组负责）。
+ * ========================================================================== */
+
+/* ================= 1. 对比度 token（WCAG AA 实测，见汇报） ================= */
+/* 浅色：--text2 3.78:1 → 5.52:1；--accent-dark 3.74:1 → 5.21:1（白底）；
+ * --warn-tx 3.79:1 → 5.37:1（白底）。深色：--text2 5.98:1 → 7.89:1。 */
+body{
+  --text2:#5a6d63;
+  --border:#b9ccc2;
+  --border-strong:#6f857b; /* 交互控件边框：白底 3.95:1，达非文本对比 3:1 */
+  --accent-dark:#0b7a70;
+  --warn-tx:#9c5b00;
+}
+body[data-theme="dark"]{
+  --text2:#b3c6b8;
+  --border:#48604f;
+  --border-strong:#67856f; /* 深色卡片底 3.48:1，达非文本对比 3:1 */
+}
+/* 数量小标签不再用 opacity 淡化（旧值 .72 会把对比压到 2.4:1 / 3.8:1） */
+.nav-cat .cnt{opacity:1}
+
+/* 交互控件边框统一加深（选项、输入框、筛选器、周期表 chips、顶栏按钮） */
+.wb-options label,
+.wb-filters input,.wb-filters select,
+.wb-part input,.wb-part textarea,.wb-notes textarea,
+.pt-chip,.pt-mini,.pt-q input,
+.searchbox input,.iconbtn,
+.home-start button,
+.atom-ctrls button,
+.wb-navctl button{border-color:var(--border-strong)}
+
+/* ================= 2. 可滚动区：渐变遮罩 +“向下滚动”提示 ================= */
+/* 提示条由 workbench-nav.js 注入为各滚动容器的最后一个子元素；
+ * position:sticky 使其在有更多内容时贴在可视区底部，到底后由 JS 隐藏。 */
+.docview,.pt-scroll,.pt-info,.sidebar{scroll-padding-bottom:52px}
+.wb-scrollcue{
+  position:sticky;bottom:0;z-index:5;
+  display:flex;justify-content:center;align-items:flex-end;
+  height:46px;margin-top:-46px;pointer-events:none;
+  background:linear-gradient(to bottom,transparent,var(--bg));
+  transition:opacity .25s ease,visibility .25s;
+}
+.sidebar>.wb-scrollcue,.pt-info>.wb-scrollcue{
+  background:linear-gradient(to bottom,transparent,var(--card));
+}
+.wb-scrollcue.wb-cue-off{opacity:0;visibility:hidden}
+.wb-cue-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-bottom:8px;padding:4px 12px;border-radius:999px;
+  background:var(--card);border:1px solid var(--border-strong);
+  color:var(--text2);font-size:11px;font-weight:700;line-height:1.6;
+  box-shadow:var(--shadow);animation:wb-cue-bob 2.2s ease-in-out infinite;
+}
+@keyframes wb-cue-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(3px)}}
+@media (prefers-reduced-motion:reduce){.wb-cue-pill{animation:none}}
+
+/* ================= 3. 周期表：收紧行高，放大元素格字号 ================= */
+/* 11 行 × 原 44px+ 单元格在 768px 高视口下会把镧系/锕系推出首屏；
+ * 单元格限高 42px、间距收紧后，整表约 490px，可与工具条同屏容纳。 */
+.pt-head{padding:7px 14px}
+.pt-bars{padding:6px 14px 4px}
+.pt-row{margin-bottom:4px}
+.pt-scroll{scroll-padding-bottom:52px}
+.pt-inner{padding:8px 14px 2px}
+.pt-grid{gap:2px}
+.pt-cell{min-height:30px;max-height:42px}
+.pt-z{font-size:10px;opacity:.9;top:3px;left:5px}
+.pt-sym{font-size:clamp(13px,1.15vw,18px);line-height:1.1}
+.pt-nm{font-size:10px;opacity:.95;line-height:1.15}
+.pt-axis{font-size:10px}
+.pt-foot{padding:5px 14px 7px}
+
+/* 浅色下周期表主题 accent（如 cyan #22d3ee 白底仅 1.81:1）不适合做正文色；
+ * 激活页签改用 --primary（白底 6.17:1），深色下 accent 对比充足，保持原样。 */
+body:not([data-theme="dark"]) .pt-tab.on{color:var(--primary)}
+
+/* ================= 4. 元素详情弹窗：内容区可滚动，不裁末行 ================= */
+/* 原 .ptdlg 为 grid 但未限定行高，.pt-info 的 min-height:auto 会把行撑出
+ * 860px/92vh 的弹窗高度，再被 overflow:hidden 裁掉（末行“电子亲和能 /
+ * 原子半径”不可达）。桌面端限定行高 + min-height:0，使左栏内部滚动。 */
+.ptdlg{max-height:calc(100dvh - 40px)}
+.pt-info{padding:16px 20px 22px}
+.pt-hd{margin-bottom:14px}
+.pt-sec{margin-top:14px}
+.pt-kv{gap:5px 14px}
+@media (min-width:901px){
+  .ptdlg{grid-template-rows:minmax(0,1fr)}
+  .pt-info,.pt-atom{min-height:0}
+}
+/* 类别徽标：原内联 style 用类别色做文字色，最差仅 2.75:1；改用正文色，
+ * 类别色仍由 18% 底色呈现（内联 style 需 !important 覆盖）。 */
+.pt-hd .cg{color:var(--text)!important}
+/* 原子结构切换按钮激活态：旧 accent 底 + 白字仅 3.83:1（浅色）/ 2.34:1（深色）；
+ * 改用 primary 底 + 卡片色字：6.17:1（浅色）/ 8.14:1（深色）。 */
+.atom-ctrls button.on{background:var(--primary);border-color:var(--primary);color:var(--card)}
+.atom-ctrls button.on:hover{color:var(--card);border-color:var(--primary)}
+
+/* 原子轨道装饰线（游戏卡片）：1px / 48% 不透明 → 1.5px / 75%，更易辨认。
+ * 元素详情 canvas 内的轨道线由 workbench-nav.js 直接增强描边（见该文件）。 */
+.atom-orbit{border-width:1.5px;border-color:rgba(128,226,248,.75)}
+.atom-orbit.o2{border-color:rgba(166,166,250,.8)}
+
+/* ================= 5. 左侧导航 ================= */
+/* 5.1 展开动画改用 grid-template-rows 0fr→1fr：原 .subnav.open 的
+ * max-height:900px 会把“化学物品”（展开约 1918px）与“化学仪器”（约
+ * 1474px）拦腰裁断；新写法无高度上限，动画保留，旧浏览器退化为瞬时切换。 */
+.subnav{display:grid;grid-template-rows:0fr;max-height:none;transition:grid-template-rows .25s ease}
+.subnav.open{grid-template-rows:1fr;max-height:none}
+.subnav-inner{min-height:0}
+/* 5.2 章节副标题：单行省略 → 最多两行显示（title 属性仍保留全名悬停提示） */
+.sub-title{white-space:normal;font-size:11px}
+.sub-title>span:first-child{
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+  white-space:normal;overflow:hidden;text-overflow:ellipsis;line-height:1.45;
+}
+
+/* 5.3 收起全部 / 展开全部 + 掌握状态图例（由 workbench-nav.js 注入，
+ * 位于 #sidebar 顶部、#navTree 之前；sticky 使其在滚动时保持可见） */
+.wb-navctl{
+  position:sticky;top:0;z-index:6;
+  margin:-12px -10px 8px;padding:10px 14px 8px;
+  background:var(--card);border-bottom:1px solid var(--border);
+}
+.wb-navctl-row{display:flex;gap:6px}
+.wb-navctl-row button{
+  flex:1;height:28px;border:1px solid var(--border-strong);border-radius:7px;
+  background:var(--bg);color:var(--text2);font-size:11.5px;font-weight:700;cursor:pointer;
+}
+.wb-navctl-row button:hover{color:var(--primary);border-color:var(--accent)}
+.wb-legend{display:flex;flex-wrap:wrap;gap:4px 10px;margin-top:7px;font-size:10.5px;color:var(--text2);line-height:1.5}
+.wb-lg{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.wb-lg-dot{width:7px;height:7px;border-radius:50%;flex:none}
+
+/* 5.4 考点掌握状态圆点（见 js/workbench-nav.js updateMastery）。
+ * 颜色取自主题 token，随深浅色自动适配；卡片色描边保证在选中项
+ *（primary 底）上仍可分辨；“未开始”为空心点，不抢视觉。 */
+.wb-mastery{
+  flex:none;width:8px;height:8px;border-radius:50%;margin-left:auto;
+  box-shadow:0 0 0 1.5px var(--card);
+}
+.wb-mastery[data-state="done"],.wb-lg-dot[data-state="done"]{background:var(--ok-tx)}
+.wb-mastery[data-state="doing"],.wb-lg-dot[data-state="doing"]{background:var(--warn-tx)}
+.wb-mastery[data-state="weak"],.wb-lg-dot[data-state="weak"]{background:var(--danger)}
+.wb-mastery[data-state="todo"],.wb-lg-dot[data-state="todo"]{
+  background:transparent;box-shadow:0 0 0 1.5px var(--border-strong);
+}
+.sub-item.active .wb-mastery[data-state="todo"]{box-shadow:0 0 0 1.5px rgba(255,255,255,.85)}
+
+/* ================= 6. 首页：矮视口下收紧，少裁卡片 ================= */
+@media (max-height:780px){
+  .home-welcome{padding:16px 0 20px;gap:22px}
+  .home-copy h1{font-size:29px}
+  .home-sketch canvas{height:210px}
+  .home-shortcuts{margin:18px 0}
+  .home-shortcut{padding:16px 18px}
+}
