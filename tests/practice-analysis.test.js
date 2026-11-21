@@ -2,7 +2,7 @@
  * 高中化学 3D 考点工作台 — 同步练习结构化解析测试集（v2.4.0 A 组）
  *
  * 运行方法（零依赖，纯 Node 断言，无测试框架）：
- *   cd ~/workspace/chem-workbench/optimized
+ *   cd ~/workspace/chem-workbench/merged
  *   node tests/practice-analysis.test.js
  *
  * 覆盖：ChemPracticeCore.validate 对字符串 / 结构化两种解析形式的校验、
@@ -12,12 +12,19 @@
  * 本文件不打包进首屏，不进入 sw.js 预缓存。
  * ========================================================================== */
 'use strict';
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
+import fs from 'node:fs';
+import path from 'node:path';
+import vm from 'node:vm';
+import { fileURLToPath } from 'node:url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const FILE = path.join(__dirname, '..', 'js', 'inline-09-studio.js');
-const SRC = fs.readFileSync(FILE, 'utf8');
+/* 合并版布局：练习核心在 public/index.html 的内联块 #9 里（单文件应用）。
+   按注释锚点把该 <script> 块切出来当 SRC；其余切片逻辑与 GitHub 版相同。 */
+const HTML = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+const blockMark = HTML.indexOf('/* Chemistry Studio upgrade');
+const blockStart = HTML.lastIndexOf('<script>', blockMark);
+const blockEnd = HTML.indexOf('</script>', blockMark);
+const SRC = HTML.slice(blockStart, blockEnd);
 
 /* ---------- 取出 ChemPracticeCore 纯逻辑 IIFE（不依赖 DOM） ---------- */
 const exportIdx = SRC.indexOf('root.ChemPracticeCore={');
