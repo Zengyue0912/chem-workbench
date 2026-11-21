@@ -1,0 +1,38 @@
+/* ============================================================================
+ * 高中化学 3D 考点工作台 — AI 设置面板样式（合并版）
+ * 从 GitHub 版 css/commerce.css 只抽取 ai-config.js 设置面板实际用到的规则；
+ * 付费墙 / 账号登录 / 新手引导的样式不在这里。
+ * 复用站内 CSS 变量（--primary / --accent / --bg / --card / --text /
+ * --text2 / --border / --shadow）与 .btn-main / .btn-sub 按钮样式。
+ * ========================================================================== */
+
+/* ---------- 通用遮罩与弹窗（AI 设置面板用） ---------- */
+.chem2-mask{position:fixed;inset:0;z-index:200;display:grid;place-items:center;
+  background:rgba(0,20,15,.48);padding:18px;overflow-y:auto}
+.chem2-box{position:relative;background:var(--card);color:var(--text);
+  border:1px solid var(--border);border-radius:15px;padding:22px 22px 18px;
+  width:min(480px,100%);max-height:92vh;overflow:auto;box-shadow:var(--shadow-lg,0 18px 50px rgba(0,0,0,.25))}
+.chem2-x{position:absolute;top:10px;right:12px;border:none;background:none;
+  color:var(--text2);font-size:22px;line-height:1;cursor:pointer;padding:4px 6px}
+.chem2-x:hover{color:var(--text)}
+.chem2-title{font-size:18px;margin:0 0 10px;padding-right:28px}
+.chem2-note{font-size:12.5px;line-height:1.7;color:var(--text2);margin:8px 0}
+.chem2-status{font-size:12.5px;line-height:1.6;color:var(--text2);min-height:1.2em;margin:8px 0}
+.chem2-form{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.chem2-field{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--text)}
+.chem2-field input,.chem2-field select{width:100%;padding:9px 10px;
+  border:1px solid var(--border);border-radius:8px;background:var(--bg);
+  color:var(--text);font:inherit;box-sizing:border-box}
+.chem2-field input:focus,.chem2-field select:focus{outline:2px solid var(--accent);outline-offset:1px}
+.chem2-box .btn-sub{margin-top:8px}
+
+/* ---------- AI 设置面板 ---------- */
+.chem2-ai-box{width:min(520px,100%)}
+.chem2-ai-box .btn-sub{width:100%}
+
+@media (max-width:640px){
+  .chem2-box{padding:18px 16px 14px}
+}
+@media print{
+  .chem2-mask{display:none!important}
+}

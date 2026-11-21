@@ -1,83 +1,24 @@
-# 高中化学 3D 考点工作台 — Netlify 部署配置（工作流 1：性能与工程重构）
-# 本站为纯静态文件，无需构建命令；publish 即仓库根目录。
-# 版本说明：全部 CSS/JS 引用均带 ?v=w1-1 查询串；今后改动静态资源时，
-# 须同步升级版本号（见 PERF_NOTES.md），否则 immutable 长缓存会让用户拿到旧文件。
-
 [build]
-  publish = "."
+  publish = "public"
+  functions = "netlify/functions"
 
-# ---------- 缓存：静态资源长缓存（immutable，1 年），HTML 不缓存 ----------
-[[headers]]
-  for = "/css/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[functions]
+  node_bundler = "esbuild"
 
-[[headers]]
-  for = "/js/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+[[redirects]]
+  from = "/api/data/*"
+  to = "/.netlify/functions/cloud/:splat"
+  status = 200
+  force = true
 
-[[headers]]
-  for = "/assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
-
-[[headers]]
-  for = "/*.html"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[headers]]
-  for = "/"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-# ---------- 协调员：SW 与 manifest 不缓存（保证更新及时生效） ----------
-# sw.js 若被缓存，浏览器可能长期运行旧版 SW；manifest 同理。
-[[headers]]
-  for = "/sw.js"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-[[headers]]
-  for = "/manifest.json"
-  [headers.values]
-    Cache-Control = "no-cache"
-
-# ---------- 安全头（全站） ----------
 [[headers]]
   for = "/*"
   [headers.values]
-    # 本站可被同源嵌套；Bilibili 是本站去嵌别人（由 CSP frame-src 放行），不受此影响。
-    X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-    # CSP 说明：
-    # - script-src 'self'：页面已无内联 <script>（全部抽到 js/），也不用 eval；
-    #   懒加载器动态注入的脚本均为同源 js/ 文件。若未来加回内联脚本，须同步放宽。
-    #   v2.2.0 OCR CDN 放行：另放行 https://cdn.jsdelivr.net（拍照 OCR 按需加载
-    #   tesseract.js 5.1.1 主脚本；worker 与语言包见 worker-src / connect-src）。
-    # - style-src 'unsafe-inline'：JS 生成的 HTML 大量使用 style="" 属性
-    #   （搜索下拉、周期表徽章、打印报告模板等），且打印弹窗用 document.write
-    #   写入含 <style> 的报告页；去掉会破坏样式。
-    # - img-src data:/blob:：题目截图为 blob: 链接，实验报告截图为 canvas data:。
-    # - frame-src：Bilibili 视频嵌入（player.bilibili.com）。
-    # - worker-src 'self' blob:：v2.2.0 OCR CDN 放行——拍照 OCR（tesseract.js
-    #   5.1.1）从 jsdelivr 加载 worker.min.js（workerBlobURL:false，直接建
-    #   跨源 worker），worker 内再 importScripts 核心与 fetch 语言包。
-    # - connect-src 'self'：仅同源 /api/*（静态部署下不存在，代码已做失败兜底）；
-    #   v2.2.0 OCR CDN 放行——另放行 https://cdn.jsdelivr.net（语言包 fetch）。
-    Content-Security-Policy = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob:; frame-src https://player.bilibili.com https://*.bilibili.com; worker-src 'self' blob: https://cdn.jsdelivr.net; connect-src 'self' https://cdn.jsdelivr.net https://api.deepseek.com https://dashscope.aliyuncs.com https://api.moonshot.cn https://open.bigmodel.cn https://api.siliconflow.cn https://api.openai.com; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+    Referrer-Policy = "no-referrer"
+    X-Frame-Options = "DENY"
 
-# ---------- 工作流 2：商业化外壳 ----------
-# Netlify Functions 目录：netlify/functions/chat.js（AI 问答占位函数，
-# Key 放环境变量，未配置时返回 501，前端自动降级为演示模式）。
-[functions]
-  directory = "netlify/functions"
-
-# /api/chat 重写到 AI 问答函数（status 200 为内部重写，浏览器地址不变）；
-# 前端 js/ai-config.js 的“云端接口”模式即调用此路径。
-[[redirects]]
-  from = "/api/chat"
-  to = "/.netlify/functions/chat"
-  status = 200
+[[headers]]
+  for = "/teacher.html"
+  [headers.values]
+    Cache-Control = "no-store"
