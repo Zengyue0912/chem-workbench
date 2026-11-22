@@ -1,5 +1,5 @@
 import {officialReader, publisherGuide, textbookPortal, textbooks} from './chem-textbook-data.js?v=2';
-import {textbookNotes} from './chem-textbook-notes.js?v=1';
+import {textbookNotes} from './chem-textbook-notes.js?v=2';
 import {modelMarkup, mountModels, unmountModels} from './chem-textbook-models.js?v=2';
 import {labMarkup, mountLabs, unmountLabs} from './chem-textbook-labs.js?v=2';
 import './chem-textbook-preview.js?v=3';
