@@ -9,7 +9,7 @@ var LS_ANNO = 'chem_paper_2021_anno_v1';
 var TOTAL_SEC = 90 * 60;
 
 var OTHER_PAPERS = [
-  ['2022 年广东卷', 'https://gaokao.eol.cn/shiti/zhenti/202206/W020220616377740816453.pdf'],
+  ['2022 年广东卷', 'papers/2022-guangdong.pdf'],
   ['2023 年 6 月浙江卷', 'https://cdn.zizzs.com/zixunzhan/202310/2ab57aa6-3b25-4823-bae4-7497fa85cd51.pdf'],
   ['2023 年全国新课标卷', 'https://static-gkcx.gaokao.cn/upload/zhenti/20230613/1686651407_4038.pdf'],
   ['2024 年全国甲卷', 'https://down.jiaoyuwu.com/m00/37/06/d93c156d1a95ede711e34ee049fa10ca.pdf'],
@@ -316,7 +316,10 @@ function submit() {
   var msg = '';
   if (undone) msg += '还有 ' + undone + ' 道题未作答，';
   if (unrated) msg += '还有 ' + unrated + ' 个大题小问未自评（按 0 分计），';
-  if (msg && !confirm(msg + '确定交卷吗？')) return;
+  if (msg) { askConfirm(msg + '确定交卷吗？', doSubmit); return; }
+  doSubmit();
+}
+function doSubmit() {
   state.submitted = true;
   state.score = computeScore();
   save();
@@ -426,7 +429,8 @@ document.addEventListener('mouseup', function (e) {
   }, 10);
 });
 document.addEventListener('mousedown', function (e) {
-  if (!e.target.closest('.pp-anno-toolbar')) hideToolbar();
+  if (e.target.closest('.pp-anno-toolbar, .pp-modal, .pp-drawer')) return;
+  hideToolbar();
 });
 function addAnnotation(note) {
   if (!pendingSel) return;
@@ -539,8 +543,15 @@ setInterval(tickTimer, 1000);
 
 /* ---------- 抽屉与弹窗 ---------- */
 function closeDrawers() { $('ppCardDrawer').hidden = true; $('ppAnnoDrawer').hidden = true; }
+var confirmAction = null;
+function askConfirm(msg, onYes) {
+  $('ppConfirmText').textContent = msg;
+  confirmAction = onYes;
+  $('ppConfirmModal').hidden = false;
+}
 function closeModals() {
-  ['ppScoreModal', 'ppSopModal', 'ppNoteModal'].forEach(function (id) { $(id).hidden = true; });
+  confirmAction = null;
+  ['ppScoreModal', 'ppSopModal', 'ppNoteModal', 'ppConfirmModal'].forEach(function (id) { $(id).hidden = true; });
 }
 
 /* ---------- 事件 ---------- */
@@ -550,6 +561,8 @@ document.addEventListener('click', function (e) {
   if (sopBtn) { openSop(sopBtn.dataset.sop); return; }
   var closeDrawer = t.closest('[data-close-drawer]');
   if (closeDrawer) { closeDrawers(); return; }
+  var closeConfirm = t.closest('[data-close-confirm]');
+  if (closeConfirm) { $('ppConfirmModal').hidden = true; confirmAction = null; return; }
   var closeModal = t.closest('[data-close-modal]');
   if (closeModal) { closeModals(); return; }
   var mark = t.closest('mark.pp-hl');
@@ -647,14 +660,21 @@ $('ppSubmitBtn').addEventListener('click', submit);
 $('ppCardSubmit').addEventListener('click', function () { closeDrawers(); submit(); });
 $('ppScoreReview').addEventListener('click', function () { closeModals(); });
 $('ppScoreRestart').addEventListener('click', function () {
-  if (!confirm('确定重新开始吗？作答与成绩将被清空，标注会保留。')) return;
-  state = defaultState();
-  save();
-  closeModals();
-  render();
-  window.scrollTo({top: 0, behavior: 'smooth'});
-  toast('已重新开始。');
+  askConfirm('确定重新开始吗？作答与成绩将被清空，标注会保留。', function () {
+    state = defaultState();
+    save();
+    closeModals();
+    render();
+    window.scrollTo({top: 0, behavior: 'smooth'});
+    toast('已重新开始。');
+  });
 });
+$('ppConfirmYes').addEventListener('click', function () {
+  var fn = confirmAction;
+  closeModals();
+  if (fn) fn();
+});
+$('ppConfirmNo').addEventListener('click', function () { $('ppConfirmModal').hidden = true; confirmAction = null; });
 $('ppMarkBtn').addEventListener('click', function () { addAnnotation(''); });
 $('ppNoteBtn').addEventListener('click', function () {
   if (!pendingSel) return;
@@ -662,7 +682,7 @@ $('ppNoteBtn').addEventListener('click', function () {
   $('ppNoteText').value = '';
   delete $('ppNoteModal').dataset.editId;
   $('ppNoteModal').hidden = false;
-  hideToolbar();
+  $('ppAnnoToolbar').hidden = true;
 });
 $('ppNoteSave').addEventListener('click', function () {
   var note = $('ppNoteText').value.trim();
