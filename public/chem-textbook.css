@@ -365,6 +365,23 @@ a.ct-resource-back:hover {background:#e8eee5;color:#234b3c}
 .ct-model-bar a {color:#9be3d2}
 .ct-model-hint {color:var(--ct-muted);font-size:13px}
 
+/* 内嵌实验模拟：与 3D 模型共用查看器样式（.ct-model-view 等），下方加分步操作与讲义。 */
+.ct-labs {display:grid;gap:10px}
+.ct-lab-steps {display:grid;gap:8px}
+.ct-lab-strip {display:flex;gap:6px;flex-wrap:wrap}
+.ct-lab-strip button {width:32px;height:32px;border-radius:50%;border:1px solid var(--ct-line);
+  background:#fffdf8;color:var(--ct-ink);font:inherit;font-size:14px;cursor:pointer}
+.ct-lab-strip button[aria-pressed="true"] {background:var(--ct-accent);border-color:var(--ct-accent);color:#fff}
+.ct-lab-step-text {background:#fffdf8;border:1px solid var(--ct-line);border-radius:8px;
+  padding:10px 12px;font-size:14px;line-height:1.6}
+.ct-lab-step-text strong {display:block;color:var(--ct-accent);margin-bottom:2px}
+.ct-lab-more {font-size:14px;line-height:1.65}
+.ct-lab-more summary {cursor:pointer;color:var(--ct-accent);font-weight:700}
+.ct-lab-more [data-ct-lab-more] {display:grid;gap:8px;padding-top:8px}
+.ct-lab-more ul {margin:0;padding-left:20px}
+.ct-lab-more p {margin:0}
+.ct-model-fallback img {max-width:min(100%,320px);max-height:170px;border-radius:8px;justify-self:center}
+
 @media(max-width:630px) {
   .ct-book {gap:14px}
   .ct-header {align-items:start;gap:9px}
