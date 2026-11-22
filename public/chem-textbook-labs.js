@@ -113,7 +113,7 @@ function showLab(section, id) {
   more.innerHTML = (exp.principle ? `<p><strong>原理：</strong>${escape(exp.principle)}</p>` : '') +
     (exp.phenomena?.length ? `<p><strong>现象：</strong></p>${list(exp.phenomena)}` : '') +
     (exp.safety?.length ? `<p><strong>注意：</strong></p>${list(exp.safety)}` : '');
-  const openLink = section.querySelector('[data-ct-view-open]');
+  const openLink = section.querySelector('[data-ct-view] [data-ct-view-open]');
   if (openLink) openLink.textContent = openLabel(exp);
   const fallbackImg = section.querySelector('[data-ct-lab-fallback-img]');
   if (fallbackImg) {
