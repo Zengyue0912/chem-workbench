@@ -110,6 +110,22 @@ body.pp-just-submitted .pp-opt--wrong{animation:ppShake .45s ease backwards}
 @keyframes ppPop{0%{transform:scale(1)}40%{transform:scale(1.03)}100%{transform:scale(1)}}
 @keyframes ppShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-5px)}40%{transform:translateX(5px)}60%{transform:translateX(-3px)}80%{transform:translateX(2px)}}
 
+/* 即时自测 */
+.pp-check-row{margin-top:12px}
+.pp-check-btn{border:none;background:linear-gradient(135deg,#0e6b57,#0d9488);color:#fff;border-radius:999px;padding:7px 20px;font-size:14px;font-weight:600;box-shadow:0 4px 12px rgba(13,148,136,.35);transition:transform .2s,box-shadow .2s}
+.pp-check-btn:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(13,148,136,.45)}
+.pp-check-btn:active{transform:translateY(0)}
+.pp-check-badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 14px;font-size:13px;font-weight:600}
+.pp-check-badge--right{background:var(--ok-bg);color:var(--ok);border:1px solid #bbf7d0}
+.pp-check-badge--wrong{background:var(--bad-bg);color:var(--bad);border:1px solid #fecaca}
+/* 自测瞬间反馈：只给刚自测的那道题播（复用 ppPop/ppShake；减动效时全局规则自动关闭） */
+.pp-q--just-checked .pp-opt--correct{animation:ppPop .45s cubic-bezier(.22,.8,.32,1) backwards}
+.pp-q--just-checked .pp-opt--wrong{animation:ppShake .45s ease backwards}
+/* 交卷时已自测过的题不再重复播放对错动画 */
+body.pp-just-submitted .pp-q--checked .pp-opt--correct,body.pp-just-submitted .pp-q--checked .pp-opt--wrong{animation:none}
+/* 未选答案点自测：选项区轻微抖动提示 */
+.pp-shake-once{animation:ppShake .45s ease}
+
 .pp-parts{margin-top:6px}
 .pp-part{margin-top:16px;padding:14px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px rgba(31,41,55,.05);transition:box-shadow .3s,border-color .3s}
 .pp-part:hover{box-shadow:0 6px 16px -10px rgba(31,41,55,.18)}
@@ -144,6 +160,12 @@ body.pp-just-submitted .pp-opt--wrong{animation:ppShake .45s ease backwards}
 .pp-analysis p{margin:4px 0}
 .pp-analysis ol{margin:4px 0;padding-left:22px}
 .pp-analysis li{margin:3px 0}
+.pp-analysis-options{margin:4px 0;padding-left:0;list-style:none}
+.pp-analysis-options li{margin:5px 0;padding:6px 10px;border-radius:6px;font-size:14px}
+.pp-analysis-option--right{background:var(--ok-bg)}
+.pp-analysis-option--wrong{background:var(--bad-bg)}
+.pp-analysis-option--right b{color:var(--ok)}
+.pp-analysis-option--wrong b{color:var(--bad)}
 .pp-sop-list{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
 .pp-sop-list h4{margin:0 0 6px;font-size:14px}
 .pp-sop-tag{display:inline-block;margin:0 6px 6px 0;border:1px solid #cfe8de;background:#eef7f3;color:var(--primary);border-radius:999px;padding:3px 12px;font-size:13px;transition:transform .2s,background .2s,box-shadow .2s}
@@ -189,8 +211,10 @@ mark.pp-hl--flash{outline:2px solid var(--accent);outline-offset:2px}
 .pp-drawer-head h2{margin:0;font-size:17px}
 .pp-drawer-head button,.pp-modal-head button{border:none;background:none;font-size:18px;color:var(--muted)}
 .pp-drawer-body{flex:1;overflow:auto;padding:16px}
-.pp-drawer-foot{padding:12px 16px;border-top:1px solid var(--line)}
-.pp-drawer-foot .pp-submit{width:100%}
+.pp-drawer-foot{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:10px}
+.pp-drawer-foot .pp-submit{flex:1}
+.pp-restart{border:1px solid var(--line);background:#fff;border-radius:8px;padding:8px 14px;color:var(--muted);font-size:14px;transition:transform .2s,box-shadow .2s}
+.pp-restart:hover{transform:translateY(-1px);box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .pp-card-sec{margin-bottom:18px}
 .pp-card-sec h3{font-size:14px;margin:0 0 8px}
 .pp-card-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}

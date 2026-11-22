@@ -39,11 +39,13 @@ function saveJson(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); 
 
 /* ---------- 状态 ---------- */
 function defaultState() {
-  return {answers: {}, inputs: {}, rates: {}, revealed: {}, elective: 'Q11',
+  return {answers: {}, inputs: {}, rates: {}, revealed: {}, checked: {}, elective: 'Q11',
     submitted: false, timer: {remain: TOTAL_SEC, paused: false, updatedAt: Date.now()}, score: null};
 }
 var state = loadJson(LS_KEY, null) || defaultState();
 if (!state.timer) state.timer = defaultState().timer;
+if (!state.checked) state.checked = {}; /* 兼容旧存档：没有 checked 字段时补空对象 */
+var justCheckedId = null; /* 刚自测的题号：只给这道题播一次对错动画 */
 var annotations = loadJson(LS_ANNO, []);
 var firstRender = true; /* 首屏入场动画只播一次（render 会重建卷面） */
 var RING_C = 2 * Math.PI * 13; /* 计时环周长 */
@@ -99,6 +101,13 @@ function analysisHTML(a, sop, fieldPrefix) {
     });
     h += '</ol>';
   }
+  if (a.options && a.options.length) {
+    h += '<h4>逐选项解析</h4><ul class="pp-analysis-options">';
+    a.options.forEach(function (o, i) {
+      h += '<li class="' + (o.ok ? 'pp-analysis-option--right' : 'pp-analysis-option--wrong') + '" data-annot-field="' + fieldPrefix + '-analysis-opt' + i + '" data-annot-loc="解析 · 选项 ' + String.fromCharCode(65 + i) + '"><b>' + (o.ok ? '✓ ' : '✕ ') + String.fromCharCode(65 + i) + '.</b> ' + esc(o.text || '') + '</li>';
+    });
+    h += '</ul>';
+  }
   h += '<h4>易错点</h4><p data-annot-field="' + fieldPrefix + '-pitfalls" data-annot-loc="解析 · 易错点">' + esc(a.pitfalls) + '</p>';
   h += sopListHTML(sop);
   return h + '</div>';
@@ -107,7 +116,9 @@ function analysisHTML(a, sop, fieldPrefix) {
 function renderChoice(q) {
   var sel = state.answers[q.id];
   var submitted = state.submitted;
-  var h = '<article class="pp-q' + (firstRender ? ' pp-q--enter' : '') + '" id="pp-' + q.id + '"><div class="pp-q-head"><span class="pp-q-num">' + q.id.replace('Q', '') + '.</span>' +
+  var checked = !!state.checked[q.id];
+  var locked = submitted || checked; /* 交卷或自测后都锁定 */
+  var h = '<article class="pp-q' + (checked ? ' pp-q--checked' : '') + (q.id === justCheckedId ? ' pp-q--just-checked' : '') + (firstRender ? ' pp-q--enter' : '') + '" id="pp-' + q.id + '"><div class="pp-q-head"><span class="pp-q-num">' + q.id.replace('Q', '') + '.</span>' +
     '<span class="pp-chip">' + q.points + ' 分</span><span class="pp-chip">原卷第 ' + q.orig + ' 题</span></div>' +
     '<p class="pp-stem" data-annot-field="' + q.id + '-stem" data-annot-loc="第 ' + q.id.replace('Q', '') + ' 题题干">' + esc(q.stem) + '</p>' +
     figHTML(q.figures, q.id === 'Q2') +
@@ -115,17 +126,25 @@ function renderChoice(q) {
   q.options.forEach(function (o, i) {
     var cls = 'pp-opt';
     if (sel === i) cls += ' pp-opt--selected';
-    if (submitted) {
+    if (locked) {
       if (i === q.answer) cls += ' pp-opt--correct';
       else if (sel === i) cls += ' pp-opt--wrong';
     }
-    h += '<button type="button" class="' + cls + '" data-choice="' + q.id + '" data-opt="' + i + '"' + (submitted ? ' disabled' : '') + '>' +
+    h += '<button type="button" class="' + cls + '" data-choice="' + q.id + '" data-opt="' + i + '"' + (locked ? ' disabled' : '') + '>' +
       '<span class="pp-opt-key">' + String.fromCharCode(65 + i) + '.</span>' +
       '<span class="pp-opt-text" data-annot-field="' + q.id + '-opt' + i + '" data-annot-loc="第 ' + q.id.replace('Q', '') + ' 题选项 ' + String.fromCharCode(65 + i) + '">' + esc(o.t) +
       (o.fig ? '<img src="' + DATA.figuresBase + o.fig + '" alt="选项结构图" loading="lazy">' : '') + '</span></button>';
   });
   h += '</div>';
-  if (submitted) {
+  if (!submitted) {
+    if (checked) {
+      h += '<div class="pp-check-row"><span class="pp-check-badge' + (sel === q.answer ? ' pp-check-badge--right' : ' pp-check-badge--wrong') + '">' +
+        (sel === q.answer ? '已自测 · 答对了 ✓' : '已自测 · 答错了') + '</span></div>';
+    } else {
+      h += '<div class="pp-check-row"><button type="button" class="pp-check-btn" data-check="' + q.id + '">自测一下</button></div>';
+    }
+  }
+  if (locked) {
     h += '<p class="pp-ref-answer">答案：<b>' + String.fromCharCode(65 + q.answer) + '</b>　' +
       (sel === q.answer ? '回答正确 ✓' : '你的答案：' + (sel == null ? '未作答' : String.fromCharCode(65 + sel))) + '</p>';
     h += analysisHTML(q.analysis, q.sop, q.id);
@@ -378,7 +397,13 @@ function animateScore(total) {
 
 /* ---------- 答题卡 ---------- */
 function cardStatus(id) {
-  if (!state.submitted) return isAnswered(id) ? 'pp-card--done' : '';
+  if (!state.submitted) {
+    var cq = findQ(id);
+    if (cq && cq.type === 'choice' && state.checked[id]) {
+      return state.answers[id] === cq.answer ? 'pp-card--right' : 'pp-card--wrong';
+    }
+    return isAnswered(id) ? 'pp-card--done' : '';
+  }
   var q = findQ(id);
   if (q) return state.answers[id] === q.answer ? 'pp-card--right' : 'pp-card--wrong';
   var fp = findPart(id);
@@ -622,8 +647,35 @@ document.addEventListener('click', function (e) {
     }
     return;
   }
+  var check = t.closest('[data-check]');
+  if (check && !state.submitted) {
+    var qid = check.dataset.check;
+    var cq = findQ(qid);
+    if (!cq || state.checked[qid]) return;
+    if (state.answers[qid] == null) {
+      toast('先选一个答案再自测');
+      var art = $('pp-' + qid);
+      if (art) {
+        var opts = art.querySelector('.pp-options');
+        if (opts) {
+          opts.classList.add('pp-shake-once');
+          setTimeout(function () { opts.classList.remove('pp-shake-once'); }, 500);
+        }
+      }
+      return;
+    }
+    state.checked[qid] = true;
+    justCheckedId = qid;
+    save(); render();
+    setTimeout(function () {
+      justCheckedId = null;
+      var art2 = $('pp-' + qid);
+      if (art2) art2.classList.remove('pp-q--just-checked');
+    }, 900);
+    return;
+  }
   var choice = t.closest('[data-choice]');
-  if (choice && !state.submitted) {
+  if (choice && !state.submitted && !state.checked[choice.dataset.choice]) {
     var sel = window.getSelection();
     if (sel && !sel.isCollapsed) return; /* 拖选文字做标注时不触发选题 */
     state.answers[choice.dataset.choice] = parseInt(choice.dataset.opt, 10);
@@ -705,16 +757,19 @@ $('ppAnnoBtn').addEventListener('click', function () {
 $('ppSubmitBtn').addEventListener('click', submit);
 $('ppCardSubmit').addEventListener('click', function () { closeDrawers(); submit(); });
 $('ppScoreReview').addEventListener('click', function () { closeModals(); });
-$('ppScoreRestart').addEventListener('click', function () {
+function restartPaper() {
   askConfirm('确定重新开始吗？作答与成绩将被清空，标注会保留。', function () {
     state = defaultState();
     save();
+    closeDrawers();
     closeModals();
     render();
     window.scrollTo({top: 0, behavior: 'smooth'});
     toast('已重新开始。');
   });
-});
+}
+$('ppScoreRestart').addEventListener('click', restartPaper);
+$('ppCardRestart').addEventListener('click', restartPaper);
 $('ppConfirmYes').addEventListener('click', function () {
   var fn = confirmAction;
   closeModals();
