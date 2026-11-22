@@ -5,6 +5,7 @@
   --ok:#15803d; --ok-bg:#e8f5e9; --bad:#dc2626; --bad-bg:#fef2f2; --half-bg:#fff7ed;
 }
 *{box-sizing:border-box}
+[hidden]{display:none !important}
 body{margin:0;font-family:-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Segoe UI","Noto Sans SC",sans-serif;color:var(--ink);background:var(--bg);line-height:1.7}
 button{font:inherit;cursor:pointer}
 a{color:var(--primary)}
