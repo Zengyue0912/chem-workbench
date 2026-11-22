@@ -318,6 +318,24 @@ a.ct-resource-back:hover {background:#e8eee5;color:#234b3c}
 .ct-key-point dt {font-size:13px;font-weight:800;color:var(--ct-point);white-space:nowrap}
 .ct-key-point dd {margin:0;color:#2b3a34;font-size:15px;line-height:1.64;overflow-wrap:anywhere}
 .ct-key-point strong {font-weight:800;color:var(--ct-point)}
+.ct-cards {margin:19px 0 20px}
+.ct-cards>h3 {font-size:17px;margin-bottom:9px}
+.ct-card-grid {margin:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.ct-card {
+  --ct-card:#246048;
+  --ct-card-rail:#76a88a;
+  --ct-card-tint:#edf4e9;
+  padding:10px 12px;
+  border-inline-start:3px solid var(--ct-card-rail);
+  border-radius:0 5px 5px 0;
+  background:var(--ct-card-tint);
+}
+.ct-card--equation {--ct-card:#255985;--ct-card-rail:#7da5ca;--ct-card-tint:#edf3fa}
+.ct-card--pitfall {--ct-card:#91451e;--ct-card-rail:#cb946f;--ct-card-tint:#fbefe3}
+.ct-card-tag {margin:0 0 3px;font-size:12px;font-weight:800;color:var(--ct-card)}
+.ct-card h4 {margin:0 0 4px;font-size:15px;line-height:1.4;color:var(--ct-ink)}
+.ct-card-body {margin:0;color:#2b3a34;font-size:14px;line-height:1.64;overflow-wrap:anywhere}
+.ct-card--equation .ct-card-body {font-size:15px}
 .ct-resources li a {min-height:44px;display:grid;grid-template-columns:5em 1fr auto;align-items:center;gap:8px;padding:8px 3px;border-bottom:1px solid #e0e4d8;font-size:14px;line-height:1.4}
 .ct-resources li a:hover {background:#edf1e6}
 .ct-resource-kind {color:#486e5d;font-size:12px}
@@ -391,6 +409,7 @@ a.ct-resource-back:hover {background:#e8eee5;color:#234b3c}
   .ct-outline {border-right:0;border-top:1px solid var(--ct-line)}
   .ct-lesson {background:var(--ct-paper)}
   .ct-key-point {grid-template-columns:minmax(0,1fr);gap:3px;padding:8px 10px}
+  .ct-card-grid {grid-template-columns:minmax(0,1fr)}
   .ct-shelf-hero {grid-template-columns:minmax(0,1fr)}
   .ct-shelf-intro {gap:7px}
   .ct-shelf-intro .ct-header h1 {font-size:34px}

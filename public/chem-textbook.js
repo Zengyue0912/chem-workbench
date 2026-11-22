@@ -1,5 +1,6 @@
 import {officialReader, publisherGuide, textbookPortal, textbooks} from './chem-textbook-data.js?v=2';
 import {textbookNotes} from './chem-textbook-notes.js?v=2';
+import {cardMarkup} from './chem-textbook-cards.js?v=1';
 import {modelMarkup, mountModels, unmountModels} from './chem-textbook-models.js?v=2';
 import {labMarkup, mountLabs, unmountLabs} from './chem-textbook-labs.js?v=2';
 import './chem-textbook-preview.js?v=3';
@@ -150,7 +151,7 @@ function chapterMarkup(book, rows, selected, env) {
     <chemistry-book embedded aria-labelledby="ct-lesson-title">
       <div class="ct-inbook-heading" data-book-context>${heading}</div>
       <details class="ct-inbook-reading" data-book-reading>
-        <summary>本节重点</summary>${learningMarkup(selected,notes,'')}
+        <summary>本节重点</summary>${learningMarkup(selected,notes,'')}${cardMarkup(book, selected)}
       </details>
     </chemistry-book>
   </div>
@@ -172,6 +173,7 @@ function chapterMarkup(book, rows, selected, env) {
       <div class="ct-turn-sheet" aria-hidden="true"></div>
       ${heading}
       ${learningMarkup(selected, notes)}
+      ${cardMarkup(book, selected)}
       ${modelMarkup(book, selected, env)}
       ${labMarkup(book, selected, env)}
       ${links || `<p class="ct-no-resources">${selected.page ? '本节可按上方页码查阅教材原文。' : '可在官方教材里查看这一项。'}</p>`}
