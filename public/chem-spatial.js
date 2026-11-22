@@ -459,7 +459,7 @@ function resourceHref(book, section, resource) {
 function mountBookCatalog(route) {
   mount('3D 化学课本','<div id="cwBook" class="ct-book"><h1>高中化学课本</h1><p role="status">正在打开课本目录…</p></div>','h1');
   const host = $('cwBook');
-  textbookModule ??= import('./chem-textbook.js?v=5');
+  textbookModule ??= import('./chem-textbook.js?v=6');
   textbookModule.then(({mountTextbook}) => {
     if (!host.isConnected) return;
     mountTextbook(host,route,{

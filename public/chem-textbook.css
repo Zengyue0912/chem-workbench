@@ -332,6 +332,39 @@ a.ct-resource-back:hover {background:#e8eee5;color:#234b3c}
   .ct-book-well {height:146px}
   .ct-inline-spread chemistry-book[embedded] .cb-spread {grid-template-columns:minmax(200px,.91fr) minmax(0,1.76fr)}
 }
+/* 内嵌 3D 模型：章节页内直接看分子/晶体，拖动旋转、滚轮缩放。 */
+.ct-models {display:grid;gap:10px}
+.ct-models-head {display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ct-models-head h3 {font-size:17px}
+.ct-models-chips {display:flex;gap:6px;flex-wrap:wrap}
+.ct-models-chips button {border:1px solid var(--ct-line);background:#fffdf8;color:var(--ct-ink);
+  border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}
+.ct-models-chips button[aria-pressed="true"] {background:var(--ct-accent);border-color:var(--ct-accent);color:#fff}
+.ct-model-view {position:relative;height:320px;border-radius:10px;overflow:hidden;
+  background:radial-gradient(ellipse at 49% 34%,#244a56 0,#15333e 51%,#0a1826 100%)}
+.ct-model-view .cw-geometry,.ct-model-view .cw-part-labels {display:none;position:absolute;inset:0;
+  width:100%;height:100%;pointer-events:none}
+.ct-model-view.cw-webgl-on .cw-geometry,.ct-model-view.cw-webgl-on .cw-part-labels {display:block}
+.ct-model-view .cw-geometry {z-index:1}
+.ct-model-view .cw-part-labels {z-index:3;overflow:hidden}
+.ct-model-view.cw-webgl-on .ct-model-canvas {opacity:0}
+.ct-model-canvas {display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.ct-model-canvas:active {cursor:grabbing}
+.ct-model-loading,.ct-model-fallback {position:absolute;inset:0;display:grid;place-content:center;
+  margin:0;color:#d7efed;font-size:14px;pointer-events:none;z-index:2;text-align:center;padding:0 16px}
+.ct-model-fallback a {pointer-events:auto;color:#9be3d2;text-decoration:underline}
+.ct-model-bar {position:absolute;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;
+  gap:8px;flex-wrap:wrap;padding:8px 10px;color:#e9fcf7;font-size:13px;
+  background:linear-gradient(to top,rgba(8,31,39,.88),rgba(8,31,39,0))}
+.ct-model-name {margin-right:auto;font-weight:700}
+.ct-model-name i {font-style:normal;color:#9be3d2}
+.ct-model-bar button {border:1px solid #3b777d;background:rgba(16,45,55,.85);color:#e9fcf7;
+  border-radius:6px;padding:4px 10px;font:inherit;font-size:13px;cursor:pointer}
+.ct-model-bar button[aria-pressed="true"] {background:#247766;border-color:#247766}
+.ct-model-bar button:disabled {opacity:.45;cursor:default}
+.ct-model-bar a {color:#9be3d2}
+.ct-model-hint {color:var(--ct-muted);font-size:13px}
+
 @media(max-width:630px) {
   .ct-book {gap:14px}
   .ct-header {align-items:start;gap:9px}
@@ -345,6 +378,7 @@ a.ct-resource-back:hover {background:#e8eee5;color:#234b3c}
   .ct-shelf-intro {gap:7px}
   .ct-shelf-intro .ct-header h1 {font-size:34px}
   .ct-preview-stage {height:200px}
+  .ct-model-view {height:250px}
   .ct-inline-spread chemistry-book[embedded] .cb-spread {grid-template-columns:minmax(0,1fr)}
   .ct-inline-directory .ct-outline {right:auto;left:0}
 }

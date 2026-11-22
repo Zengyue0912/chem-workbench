@@ -1,5 +1,6 @@
 import {officialReader, publisherGuide, textbookPortal, textbooks} from './chem-textbook-data.js?v=2';
 import {textbookNotes} from './chem-textbook-notes.js?v=1';
+import {modelMarkup, mountModels, unmountModels} from './chem-textbook-models.js?v=1';
 import './chem-textbook-preview.js?v=3';
 import './chem-book.js?v=4';
 
@@ -170,6 +171,7 @@ function chapterMarkup(book, rows, selected, env) {
       <div class="ct-turn-sheet" aria-hidden="true"></div>
       ${heading}
       ${learningMarkup(selected, notes)}
+      ${modelMarkup(book, selected, env)}
       ${links || `<p class="ct-no-resources">${selected.page ? '本节可按上方页码查阅教材原文。' : '可在官方教材里查看这一项。'}</p>`}
       ${pageTurns}
     </article>
@@ -227,6 +229,7 @@ function enableSearch(host, env, value = '') {
 }
 
 export function mountTextbook(host, {volume, section, bookQuery}, env) {
+  unmountModels();
   const book = textbooks.find(book => book.id === volume);
   if (!book) {
     host.innerHTML = shelfMarkup(env);
@@ -236,6 +239,7 @@ export function mountTextbook(host, {volume, section, bookQuery}, env) {
     const selected = rows.find(row => row.id === section) ?? rows.find(row => row.group) ?? rows[0];
     host.innerHTML = chapterMarkup(book, rows, selected, env);
   }
+  mountModels(host);
   const heading = host.querySelector('[data-ct-heading]');
   heading.tabIndex = -1;
   heading.focus({preventScroll:true});
