@@ -4,14 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>2021年全国乙卷化学 · 交互试卷</title>
-<link rel="stylesheet" href="paper-2021.css?v=2">
+<link rel="stylesheet" href="paper-2021.css?v=3">
 </head>
 <body>
+<canvas id="ppBgCanvas" aria-hidden="true"></canvas>
 <header class="pp-topbar">
   <div class="pp-topbar-inner">
     <a class="pp-back" href="index.html">← 回工作台</a>
     <h1>2021年全国乙卷化学</h1>
+    <span class="pp-progress-label" id="ppProgressLabel"></span>
     <div class="pp-timer" id="ppTimer" title="建议用时 90 分钟，时间到后可继续作答">
+      <svg class="pp-timer-ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="pp-timer-ring-bg" cx="16" cy="16" r="13"/><circle class="pp-timer-ring-fg" id="ppTimerRing" cx="16" cy="16" r="13"/></svg>
       <span id="ppTimerText">90:00</span>
       <button type="button" id="ppTimerBtn">暂停</button>
     </div>
@@ -109,6 +112,6 @@
 
 <script src="paper-2021-yijuan-data.js?v=2"></script>
 <script src="paper-sop-data.js?v=2"></script>
-<script src="paper-2021.js?v=2"></script>
+<script src="paper-2021.js?v=3"></script>
 </body>
 </html>

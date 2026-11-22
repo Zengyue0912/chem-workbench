@@ -45,6 +45,9 @@ function defaultState() {
 var state = loadJson(LS_KEY, null) || defaultState();
 if (!state.timer) state.timer = defaultState().timer;
 var annotations = loadJson(LS_ANNO, []);
+var firstRender = true; /* 首屏入场动画只播一次（render 会重建卷面） */
+var RING_C = 2 * Math.PI * 13; /* 计时环周长 */
+var SCORE_RING_C = 2 * Math.PI * 52; /* 成绩环周长 */
 function save() {
   state.timer.updatedAt = Date.now();
   saveJson(LS_KEY, state);
@@ -104,7 +107,7 @@ function analysisHTML(a, sop, fieldPrefix) {
 function renderChoice(q) {
   var sel = state.answers[q.id];
   var submitted = state.submitted;
-  var h = '<article class="pp-q" id="pp-' + q.id + '"><div class="pp-q-head"><span class="pp-q-num">' + q.id.replace('Q', '') + '.</span>' +
+  var h = '<article class="pp-q' + (firstRender ? ' pp-q--enter' : '') + '" id="pp-' + q.id + '"><div class="pp-q-head"><span class="pp-q-num">' + q.id.replace('Q', '') + '.</span>' +
     '<span class="pp-chip">' + q.points + ' 分</span><span class="pp-chip">原卷第 ' + q.orig + ' 题</span></div>' +
     '<p class="pp-stem" data-annot-field="' + q.id + '-stem" data-annot-loc="第 ' + q.id.replace('Q', '') + ' 题题干">' + esc(q.stem) + '</p>' +
     figHTML(q.figures, q.id === 'Q2') +
@@ -178,7 +181,7 @@ function renderPart(q, p, idx) {
 
 function renderBig(q) {
   var unpicked = q.elective && state.elective !== q.id;
-  var h = '<article class="pp-q' + (unpicked ? ' pp-q--unpicked' : '') + '" id="pp-' + q.id + '"><div class="pp-q-head"><span class="pp-q-num">' + q.id.replace('Q', '') + '.</span>' +
+  var h = '<article class="pp-q' + (unpicked ? ' pp-q--unpicked' : '') + (firstRender && !unpicked ? ' pp-q--enter' : '') + '" id="pp-' + q.id + '"><div class="pp-q-head"><span class="pp-q-num">' + q.id.replace('Q', '') + '.</span>' +
     '<span class="pp-chip">' + q.points + ' 分</span><span class="pp-chip">原卷第 ' + q.orig + ' 题</span>' +
     (q.elective ? '<span class="pp-chip pp-chip--elective">选考题</span>' : '') + '</div>' +
     (q.title ? '<p><b>' + esc(q.title) + '</b></p>' : '') +
@@ -203,6 +206,7 @@ function render() {
   elec.forEach(function (q) { h += renderBig(q); });
   h += '</section>';
   $('ppSections').innerHTML = h;
+  firstRender = false;
   applyAnnotations();
   updateProgress();
   updateAnnoCount();
@@ -230,7 +234,15 @@ function isAnswered(id) {
 function updateProgress() {
   var items = scoredItems();
   var done = items.filter(isAnswered).length;
-  $('ppProgressFill').style.width = (items.length ? Math.round(done / items.length * 100) : 0) + '%';
+  var fill = $('ppProgressFill');
+  fill.style.width = (items.length ? Math.round(done / items.length * 100) : 0) + '%';
+  fill.classList.toggle('pp-progress--empty', done === 0);
+  var label = $('ppProgressLabel');
+  if (label) {
+    var allDone = items.length > 0 && done === items.length;
+    label.textContent = allDone ? '已全部完成 ✓' : '已答 ' + done + ' / ' + items.length + ' 题';
+    label.classList.toggle('pp-progress--done', allDone);
+  }
 }
 
 /* ---------- 判分 ---------- */
@@ -272,8 +284,17 @@ function computeScore() {
   var total = Math.round((choiceScore + bigScore) * 10) / 10;
   return {total: total, choice: choiceScore, big: Math.round(bigScore * 10) / 10, detail: detail};
 }
+function scoreCheer(total) {
+  if (total >= 90) return '接近满分，化学功底很扎实，继续保持！';
+  if (total >= 75) return '很不错的成绩，再抠一抠错题就能冲上 90！';
+  if (total >= 60) return '已过及格线，错题挂的 SOP 逐条过一遍，提分空间很大。';
+  if (total >= 40) return '基础还在路上，别灰心——错题对应的 SOP 就是你的提分清单。';
+  return '这次只是摸底，跟着错题 SOP 一条一条补，下次一定更好。';
+}
 function scoreHTML(sc) {
-  var h = '<div class="pp-score-total"><div class="pp-score-num">' + sc.total + ' <span style="font-size:18px">/ 100</span></div>' +
+  var h = '<div class="pp-score-total"><div class="pp-score-ring"><svg viewBox="0 0 120 120" aria-hidden="true"><circle class="pp-score-ring-bg" cx="60" cy="60" r="52"/><circle class="pp-score-ring-fg" id="ppScoreRing" cx="60" cy="60" r="52"/></svg>' +
+    '<div class="pp-score-num"><span id="ppScoreNum">0</span><span class="pp-score-unit">/ 100 分</span></div></div>' +
+    '<p class="pp-score-cheer">' + scoreCheer(sc.total) + '</p>' +
     '<div class="pp-score-sub">选择题 ' + sc.choice + ' / 42 分 · 大题自评 ' + sc.big + ' / 58 分（选考计 ' + (state.elective === 'Q11' ? '第 35 题' : '第 36 题') + '）</div></div>';
   h += '<table class="pp-score-table"><tr><th>题目</th><th>得分</th></tr>';
   sc.detail.forEach(function (d) {
@@ -323,6 +344,8 @@ function doSubmit() {
   state.submitted = true;
   state.score = computeScore();
   save();
+  document.body.classList.add('pp-just-submitted');
+  setTimeout(function () { document.body.classList.remove('pp-just-submitted'); }, 900);
   render();
   showScore();
 }
@@ -330,6 +353,27 @@ function showScore() {
   if (!state.score) state.score = computeScore();
   $('ppScoreBody').innerHTML = scoreHTML(state.score);
   $('ppScoreModal').hidden = false;
+  animateScore(state.score.total);
+}
+/* 成绩数字滚动 + 环形进度（0.6s；减动效时直接显示终值） */
+function animateScore(total) {
+  var numEl = $('ppScoreNum'), ring = $('ppScoreRing');
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (reduce || !numEl) {
+    if (numEl) numEl.textContent = total;
+    if (ring) ring.style.strokeDashoffset = SCORE_RING_C * (1 - total / 100);
+    return;
+  }
+  var start = null, dur = 600;
+  function step(ts) {
+    if (!start) start = ts;
+    var p = Math.min(1, (ts - start) / dur);
+    var e = 1 - Math.pow(1 - p, 3);
+    numEl.textContent = Math.round(total * 10 * e) / 10;
+    if (ring) ring.style.strokeDashoffset = SCORE_RING_C * (1 - (total * e) / 100);
+    if (p < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
 }
 
 /* ---------- 答题卡 ---------- */
@@ -536,6 +580,8 @@ function tickTimer() {
     }
   }
   $('ppTimerText').textContent = fmt(t.remain);
+  var ring = $('ppTimerRing');
+  if (ring) ring.style.strokeDashoffset = (RING_C * (1 - t.remain / TOTAL_SEC)).toFixed(1);
   $('ppTimer').classList.toggle('pp-timer--over', t.remain === 0);
   $('ppTimerBtn').textContent = t.paused ? '继续' : '暂停';
 }
@@ -696,8 +742,80 @@ $('ppNoteSave').addEventListener('click', function () {
   closeModals();
 });
 
+/* ---------- 背景粒子（轻量 canvas 分子装饰；减动效时不启动） ---------- */
+function initBgCanvas() {
+  var cv = $('ppBgCanvas');
+  if (!cv || !cv.getContext) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var ctx = cv.getContext('2d');
+  var W = 0, H = 0, parts = [], raf = null;
+  function resize() {
+    var dpr = Math.min(1.5, window.devicePixelRatio || 1);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.floor(W * dpr); cv.height = Math.floor(H * dpr);
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function make() {
+    parts = [];
+    var n = Math.max(10, Math.min(26, Math.floor(W * H / 60000)));
+    for (var i = 0; i < n; i++) {
+      parts.push({
+        x: Math.random() * W, y: Math.random() * H,
+        r: 2 + Math.random() * 4,
+        vx: (Math.random() - 0.5) * 0.14, vy: (Math.random() - 0.5) * 0.14,
+        c: Math.random() < 0.5 ? '13,148,136' : '14,107,87'
+      });
+    }
+  }
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    var i, j, p, a, b, dx, dy, d;
+    for (i = 0; i < parts.length; i++) {
+      p = parts[i];
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < -12) p.x = W + 12; if (p.x > W + 12) p.x = -12;
+      if (p.y < -12) p.y = H + 12; if (p.y > H + 12) p.y = -12;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(' + p.c + ',0.10)';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r + 6, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(' + p.c + ',0.05)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    for (i = 0; i < parts.length; i++) {
+      for (j = i + 1; j < parts.length; j++) {
+        a = parts[i]; b = parts[j];
+        dx = a.x - b.x; dy = a.y - b.y;
+        d = Math.sqrt(dx * dx + dy * dy);
+        if (d < 120) {
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = 'rgba(13,148,136,' + (0.06 * (1 - d / 120)).toFixed(3) + ')';
+          ctx.lineWidth = 1;
+          ctx.stroke();
+        }
+      }
+    }
+    raf = requestAnimationFrame(draw);
+  }
+  function start() { if (!raf) draw(); }
+  function stop() { if (raf) { cancelAnimationFrame(raf); raf = null; } }
+  resize();
+  make();
+  start();
+  window.addEventListener('resize', function () { resize(); make(); });
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) stop(); else start();
+  });
+}
+
 /* ---------- 初始化 ---------- */
 renderOthers();
 render();
 tickTimer();
+initBgCanvas();
 })();
