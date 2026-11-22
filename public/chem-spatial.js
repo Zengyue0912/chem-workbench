@@ -445,6 +445,9 @@ function bookResource(key) {
   } else if (type === 'tool' && id === 'periodic') {
     name = '元素周期表';
     kindLabel = '查阅工具';
+  } else if (type === 'sop') {
+    name = window.ChemPreparedSop?.byId.get(id)?.title;
+    kindLabel = '解题 SOP';
   }
   return name ? {key,type,id,name,kindLabel} : null;
 }
@@ -459,7 +462,7 @@ function resourceHref(book, section, resource) {
 function mountBookCatalog(route) {
   mount('3D 化学课本','<div id="cwBook" class="ct-book"><h1>高中化学课本</h1><p role="status">正在打开课本目录…</p></div>','h1');
   const host = $('cwBook');
-  textbookModule ??= import('./chem-textbook.js?v=10');
+  textbookModule ??= import('./chem-textbook.js?v=11');
   textbookModule.then(({mountTextbook}) => {
     if (!host.isConnected) return;
     mountTextbook(host,route,{
@@ -497,6 +500,7 @@ function openAttachedResource(resource, context) {
       const item = window.CHEM_PRACTICE_DEFAULT.questions.find(row=>row.id===resource.id);
       window.ChemStudentStudy.openQuestion(item,'',{analyze:true});
     }
+    if (resource.type === 'sop') window.ChemStudentStudy.openLibrary(resource.id);
   } finally {
     openingBookResource = false;
   }

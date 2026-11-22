@@ -338,6 +338,7 @@ a.ct-resource-back:hover {background:#e8eee5;color:#234b3c}
 .ct-card--equation .ct-card-body {font-size:15px}
 .ct-resources li a {min-height:44px;display:grid;grid-template-columns:5em 1fr auto;align-items:center;gap:8px;padding:8px 3px;border-bottom:1px solid #e0e4d8;font-size:14px;line-height:1.4}
 .ct-resources li a:hover {background:#edf1e6}
+.ct-sop-note {margin:-4px 0 8px;font-size:13px;color:#5b6650}
 .ct-resource-kind {color:#486e5d;font-size:12px}
 .ct-no-resources {color:var(--ct-muted);font-size:13px;line-height:1.53}
 .ct-page-turns {display:flex;justify-content:space-between;gap:6px;margin-top:18px}

@@ -1,0 +1,23 @@
+export const sopMap = {
+  'selective-1': {
+    'enthalpy': ['H04', 'H05', 'H07', 'H08', 'H09', 'H13', 'H14'],
+    'heat-calc': ['H01', 'H02', 'H03', 'H06', 'H10'],
+    'rate': ['K01', 'K02', 'K03', 'K04', 'K05', 'K06', 'H11'],
+    'equilibrium': ['K07', 'K08', 'K09', 'K10', 'K11', 'K12', 'K13', 'K14', 'K15', 'K16', 'K17', 'K18', 'K19'],
+    'reaction-direction': ['H12'],
+    'reaction-control': ['K20'],
+    'review-2': ['K21'],
+    'ionization': ['W03', 'W04', 'W05', 'W14', 'W15'],
+    'ph': ['W01', 'W02', 'W06', 'W07', 'W13'],
+    'hydrolysis': ['W08', 'W09', 'W10', 'W11', 'W12'],
+    'solubility-equilibrium': ['W16', 'W17', 'W18', 'W19', 'W20', 'W21'],
+    'lab-titration': ['W23'],
+    'lab-hydrolysis': ['W22'],
+    'galvanic-cell': ['C01', 'C04', 'C05', 'C06', 'C07', 'C08'],
+    'electrolysis': ['C02', 'C09', 'C10', 'C11', 'C12', 'C13', 'C15', 'C19', 'C20'],
+    'corrosion': ['C16', 'C17'],
+    'review-4': ['C03', 'C21'],
+    'lab-plating': ['C14'],
+    'lab-fuel-cell': ['C18'],
+  },
+};
