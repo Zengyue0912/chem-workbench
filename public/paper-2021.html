@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2021年全国乙卷化学 · 交互试卷</title>
+<link rel="stylesheet" href="paper-2021.css?v=1">
+</head>
+<body>
+<header class="pp-topbar">
+  <div class="pp-topbar-inner">
+    <a class="pp-back" href="index.html">← 回工作台</a>
+    <h1>2021年全国乙卷化学</h1>
+    <div class="pp-timer" id="ppTimer" title="建议用时 90 分钟，时间到后可继续作答">
+      <span id="ppTimerText">90:00</span>
+      <button type="button" id="ppTimerBtn">暂停</button>
+    </div>
+    <div class="pp-top-actions">
+      <button type="button" id="ppCardBtn">答题卡</button>
+      <button type="button" id="ppAnnoBtn">我的标注 <span id="ppAnnoCount"></span></button>
+      <button type="button" id="ppSubmitBtn" class="pp-submit">交卷</button>
+    </div>
+  </div>
+  <div class="pp-progress"><div id="ppProgressFill"></div></div>
+</header>
+
+<main class="pp-main">
+  <div class="pp-paper" id="ppPaper">
+    <div class="pp-paper-head">
+      <h2>2021年普通高等学校招生全国统一考试</h2>
+      <p class="pp-paper-sub">理科综合 · 化学部分（整理版）</p>
+      <p class="pp-paper-meta">总分 100 分 · 选择题 7 题（每题 6 分）· 必考大题 3 题 · 选考题二选一</p>
+      <p class="pp-paper-note">题干与答案对照原卷逐题核实。原卷未公布大题各小问分值，卷内小问分值为自定（按大题总分均分），仅供自测参考。大题需对照参考答案自评对错。</p>
+      <p class="pp-paper-note pp-paper-note--anno">划词标注：选中题目或解析里的文字，可以标重点或记笔记，标注保存在本机浏览器，下次打开还在。</p>
+    </div>
+    <div id="ppSections"></div>
+
+    <section class="pp-others" id="ppOthers">
+      <h2>其他年份真题试卷（PDF）</h2>
+      <p class="pp-others-note">以下为历年高考化学真题试卷原文链接，点击后在下方查看；如无法内嵌显示，请点“在新窗口打开”。</p>
+      <div class="pp-others-list" id="ppOthersList"></div>
+      <div class="pp-pdf-wrap" id="ppPdfWrap" hidden>
+        <div class="pp-pdf-bar"><span id="ppPdfTitle"></span><a id="ppPdfOpen" href="#" target="_blank" rel="noopener">在新窗口打开 ↗</a></div>
+        <iframe id="ppPdfFrame" title="真题试卷 PDF"></iframe>
+      </div>
+    </section>
+  </div>
+</main>
+
+<aside class="pp-drawer" id="ppCardDrawer" hidden>
+  <div class="pp-drawer-head"><h2>答题卡</h2><button type="button" data-close-drawer>✕</button></div>
+  <div class="pp-drawer-body" id="ppCardBody"></div>
+  <div class="pp-drawer-foot"><button type="button" id="ppCardSubmit" class="pp-submit">交卷</button></div>
+</aside>
+
+<aside class="pp-drawer" id="ppAnnoDrawer" hidden>
+  <div class="pp-drawer-head"><h2>我的标注</h2><button type="button" data-close-drawer>✕</button></div>
+  <div class="pp-drawer-body" id="ppAnnoBody"></div>
+</aside>
+
+<div class="pp-modal" id="ppScoreModal" hidden>
+  <div class="pp-modal-box pp-score">
+    <div class="pp-modal-head"><h2>成绩单</h2><button type="button" data-close-modal>✕</button></div>
+    <div class="pp-modal-body" id="ppScoreBody"></div>
+    <div class="pp-modal-foot">
+      <button type="button" id="ppScoreReview">回卷面查看解析</button>
+      <button type="button" id="ppScoreRestart">重新开始</button>
+    </div>
+  </div>
+</div>
+
+<div class="pp-modal" id="ppSopModal" hidden>
+  <div class="pp-modal-box pp-sop">
+    <div class="pp-modal-head"><h2 id="ppSopTitle"></h2><button type="button" data-close-modal>✕</button></div>
+    <div class="pp-modal-body" id="ppSopBody"></div>
+  </div>
+</div>
+
+<div class="pp-anno-toolbar" id="ppAnnoToolbar" hidden>
+  <button type="button" id="ppMarkBtn">标重点</button>
+  <button type="button" id="ppNoteBtn">记笔记</button>
+</div>
+
+<div class="pp-modal" id="ppNoteModal" hidden>
+  <div class="pp-modal-box pp-note">
+    <div class="pp-modal-head"><h2>记笔记</h2><button type="button" data-close-modal>✕</button></div>
+    <div class="pp-modal-body">
+      <p class="pp-note-quote" id="ppNoteQuote"></p>
+      <textarea id="ppNoteText" rows="4" maxlength="500" placeholder="写下你的笔记（最多 500 字）"></textarea>
+    </div>
+    <div class="pp-modal-foot">
+      <button type="button" id="ppNoteSave" class="pp-submit">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="pp-toast" id="ppToast" hidden></div>
+
+<script src="paper-2021-yijuan-data.js?v=1"></script>
+<script src="paper-sop-data.js?v=1"></script>
+<script src="paper-2021.js?v=1"></script>
+</body>
+</html>
