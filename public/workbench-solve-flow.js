@@ -453,14 +453,28 @@ function buildPhSpec(q) {
   if (Kb != null) spec.Kb = Kb;
   return spec;
 }
+/* 从题干中提取第一个可解析的化学式（通用解析替代硬编码白名单）。
+ * 只接受长度 ≥2 的候选（单字母太易误判：C 可能是选项、K 可能是常数），
+ * 且须经引擎 parseFormula 校验通过；括号基团（如 Ca(OH)2）整体提取。 */
+function extractFormula(q) {
+  var eng = engine();
+  if (!eng || typeof eng.parseFormula !== 'function') return null;
+  var nq = norm(q);
+  var re = /(?:[A-Z][a-z]?\d*|\([^()]*\)\d*)+/g;
+  var m;
+  while ((m = re.exec(nq)) !== null) {
+    var tok = m[0];
+    if (tok.length < 2 || !/^[A-Z]/.test(tok)) continue;
+    try {
+      var r = eng.parseFormula(tok);
+      if (r && r.ok) return tok;
+    } catch (e) { /* 继续找下一个候选 */ }
+  }
+  return null;
+}
 function buildStoichSpec(q) {
   var nq = norm(q);
-  var known = ['H2O', 'NaCl', 'H2SO4', 'CaCO3', 'NaOH', 'CO2', 'O2', 'H2',
-    'Fe', 'CuSO4', 'HCl', 'NH3', 'CH4', 'C6H12O6', 'Na2CO3', 'CaO', 'Al', 'Zn', 'Mg', 'KCl'];
-  var formula = null;
-  for (var i = 0; i < known.length; i++) {
-    if (nq.indexOf(known[i]) !== -1) { formula = known[i]; break; }
-  }
+  var formula = extractFormula(q);
   var mass = null, volMl = null, conc = extractConc(q), moles = null;
   var mm = nq.match(/(\d+(?:\.\d+)?)\s*(?:g|克)/);
   if (mm) mass = parseFloat(mm[1]);
@@ -532,6 +546,39 @@ function buildConserveSpec(q) {
   }
   return null;
 }
+/* 解析稀释题为引擎 conserve 的 dilution 模板 {c1, v1, c2?|v2?}。
+ * 只处理三种明确情形：(a) 两体积 + 一浓度 → 求稀释后浓度；
+ * (b) 两浓度 + 一体积 → 求稀释后体积；(c) 稀释 N 倍 → 求稀释后浓度。
+ * 问"加水多少"时不走引擎（引擎只给 V₂，不给加水量），返回 null 走降级链路。 */
+function buildDilutionSpec(q) {
+  var nq = norm(q);
+  if (!/稀释/.test(q) || /加水|加多少水|需加水|加入.*水/.test(q)) return null;
+  var concs = [];
+  var cm = nq.match(/(\d+(?:\.\d+)?)\s*(?:mol\/L|mol·L)/g) || [];
+  for (var i = 0; i < cm.length; i++) {
+    var cn = parseFloat(cm[i]);
+    if (isFinite(cn) && cn > 0) concs.push(cn);
+  }
+  var vols = [];
+  var vm = nq.match(/(\d+(?:\.\d+)?)\s*(mL|毫升|L|升)/g) || [];
+  for (var j = 0; j < vm.length; j++) {
+    var vv = parseFloat(vm[j]);
+    if (!isFinite(vv) || vv <= 0) continue;
+    vols.push(/L|升/.test(vm[j]) && !/mL|毫升/.test(vm[j]) ? vv * 1000 : vv);
+  }
+  var fm = nq.match(/稀释\s*(\d+(?:\.\d+)?)\s*倍/);
+  if (fm && concs.length >= 1 && /浓度/.test(q)) {
+    var f = parseFloat(fm[1]);
+    if (isFinite(f) && f > 1) return { template: 'dilution', c1: concs[0], v1: 1, v2: f };
+  }
+  if (concs.length >= 1 && vols.length >= 2 && /浓度/.test(q)) {
+    return { template: 'dilution', c1: concs[0], v1: vols[0], v2: vols[1] };
+  }
+  if (concs.length >= 2 && vols.length >= 1 && /体积/.test(q)) {
+    return { template: 'dilution', c1: concs[0], v1: vols[0], c2: concs[1] };
+  }
+  return null;
+}
 /* 决定本题是否可交给引擎；opts 可强制指定方法与 spec（变式题用）。 */
 function detectEngineCall(q, opts) {
   if (opts && opts.engineMethod) {
@@ -545,11 +592,20 @@ function detectEngineCall(q, opts) {
     var phSpec = buildPhSpec(q);
     if (phSpec) return { method: 'ph', arg: phSpec, cls: 'ph' };
   }
+  if (/摩尔质量/.test(q)) {
+    var mf = extractFormula(q);
+    if (mf) return { method: 'molarMass', arg: mf, cls: 'molarMass' };
+  }
   if (/守恒|得失电子/.test(q)) {
     /* 守恒题只走 conserve；解析不出引擎模板时直接返回 null（不 fallback
      * 到 stoich，避免把守恒题当成普通计量题算错）。 */
     var cspec = buildConserveSpec(q);
     return cspec ? { method: 'conserve', arg: cspec, cls: 'conserve' } : null;
+  }
+  if (/稀释/.test(q)) {
+    var dspec = buildDilutionSpec(q);
+    if (dspec) return { method: 'conserve', arg: dspec, cls: 'conserve' };
+    /* 解析不出稀释参数时继续往下，不强制 null，让 SOP/助教链路处理。 */
   }
   if (/物质的量|摩尔/.test(q)) {
     var stSpec = buildStoichSpec(q);
