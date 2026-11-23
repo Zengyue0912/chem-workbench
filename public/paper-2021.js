@@ -8,18 +8,6 @@ var LS_KEY = 'chem_paper_2021_v1';
 var LS_ANNO = 'chem_paper_2021_anno_v1';
 var TOTAL_SEC = 90 * 60;
 
-var OTHER_PAPERS = [
-  ['2022 年广东卷', 'papers/2022-guangdong.pdf'],
-  ['2023 年 6 月浙江卷', 'https://cdn.zizzs.com/zixunzhan/202310/2ab57aa6-3b25-4823-bae4-7497fa85cd51.pdf'],
-  ['2023 年全国新课标卷', 'https://static-gkcx.gaokao.cn/upload/zhenti/20230613/1686651407_4038.pdf'],
-  ['2024 年全国甲卷', 'https://down.jiaoyuwu.com/m00/37/06/d93c156d1a95ede711e34ee049fa10ca.pdf'],
-  ['2024 年北京卷', 'https://cdn.zgkao.com/17195390325742024%E5%8C%97%E4%BA%AC%E9%AB%98%E8%80%83%E7%9C%9F%E9%A2%98%E5%8C%96%E5%AD%A6%EF%BC%88%E6%95%99%E5%B8%88%E7%89%88%EF%BC%89.pdf'],
-  ['2024 年安徽卷', 'https://down.jiaoyuwu.com/m00/43/fe/2cba6a02ead6e16bc54bbba9c10583f1.pdf'],
-  ['2025 年山东卷', 'https://static-gkcx.gaokao.cn/upload/zhenti/20250613/1749812160_2083.pdf'],
-  ['2025 年全国新课标理综卷', 'https://img.gaokaozhitongche.com/resource/pdf/paper/202507/20250728030001_5IZPSD.pdf#page=11'],
-  ['2021 年全国乙卷 · 官方评析', 'https://gaokao.neea.edu.cn/xhtml1/report/21121/3939-1.htm']
-];
-
 /* ---------- 工具 ---------- */
 function $(id) { return document.getElementById(id); }
 function esc(s) {
@@ -569,23 +557,6 @@ function openSop(id) {
   $('ppSopModal').hidden = false;
 }
 
-/* ---------- 其他试卷 ---------- */
-function renderOthers() {
-  $('ppOthersList').innerHTML = OTHER_PAPERS.map(function (p, i) {
-    return '<button type="button" data-paper="' + i + '">' + esc(p[0]) + '</button>';
-  }).join('');
-}
-function openPaper(i) {
-  var p = OTHER_PAPERS[i];
-  document.querySelectorAll('[data-paper]').forEach(function (b) { b.classList.remove('pp-others--on'); });
-  document.querySelector('[data-paper="' + i + '"]').classList.add('pp-others--on');
-  $('ppPdfTitle').textContent = p[0];
-  $('ppPdfOpen').href = p[1];
-  $('ppPdfFrame').src = p[1];
-  $('ppPdfWrap').hidden = false;
-  $('ppPdfWrap').scrollIntoView({behavior: 'smooth', block: 'nearest'});
-}
-
 /* ---------- 计时 ---------- */
 function fmt(sec) {
   sec = Math.max(0, sec);
@@ -728,8 +699,6 @@ document.addEventListener('click', function (e) {
     toast('标注已删除。');
     return;
   }
-  var paper = t.closest('[data-paper]');
-  if (paper) { openPaper(parseInt(paper.dataset.paper, 10)); return; }
 });
 document.addEventListener('input', function (e) {
   var inp = e.target.closest('[data-input]');
@@ -869,7 +838,6 @@ function initBgCanvas() {
 }
 
 /* ---------- 初始化 ---------- */
-renderOthers();
 render();
 tickTimer();
 initBgCanvas();
