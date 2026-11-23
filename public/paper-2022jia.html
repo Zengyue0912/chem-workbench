@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2022年全国甲卷化学 · 交互试卷</title>
+<link rel="stylesheet" href="paper-2022jia.css?v=1">
+</head>
+<body>
+<canvas id="ppBgCanvas" aria-hidden="true"></canvas>
+<header class="pp-topbar">
+  <div class="pp-topbar-inner">
+    <a class="pp-back" href="index.html">← 回工作台</a>
+    <h1>2022年全国甲卷化学</h1>
+    <a class="pp-back" href="papers.html">← 历年真题</a>
+    <span class="pp-progress-label" id="ppProgressLabel"></span>
+    <div class="pp-timer" id="ppTimer" title="建议用时 90 分钟，时间到后可继续作答">
+      <svg class="pp-timer-ring" viewBox="0 0 32 32" aria-hidden="true"><circle class="pp-timer-ring-bg" cx="16" cy="16" r="13"/><circle class="pp-timer-ring-fg" id="ppTimerRing" cx="16" cy="16" r="13"/></svg>
+      <span id="ppTimerText">90:00</span>
+      <button type="button" id="ppTimerBtn">暂停</button>
+    </div>
+    <div class="pp-top-actions">
+      <button type="button" id="ppCardBtn">答题卡</button>
+      <button type="button" id="ppAnnoBtn">我的标注 <span id="ppAnnoCount"></span></button>
+      <button type="button" id="ppSubmitBtn" class="pp-submit">交卷</button>
+    </div>
+  </div>
+  <div class="pp-progress"><div id="ppProgressFill"></div></div>
+</header>
+
+<main class="pp-main">
+  <div class="pp-paper" id="ppPaper">
+    <div class="pp-paper-head">
+      <h2>2022年普通高等学校招生全国统一考试</h2>
+      <p class="pp-paper-sub">理科综合 · 化学部分（整理版）</p>
+      <p class="pp-paper-meta">总分 100 分 · 选择题 7 题（每题 6 分）· 必考大题 3 题 · 选考题二选一</p>
+      <p class="pp-paper-note">本卷官方答案未公开，答案均为独立验算（其中 2 题经教师版解析交叉核对一致）；Q10(2)①读图数值与 Q12(7)手性碳数在解析中注明了推导过程。原卷未公布大题各小问分值，卷内小问分值为自定（按小问难度分配），仅供自测参考。大题需对照参考答案自评对错。</p>
+      <p class="pp-paper-note pp-paper-note--anno">划词标注：选中题目或解析里的文字，可以标重点或记笔记，标注保存在本机浏览器，下次打开还在。</p>
+    </div>
+    <div id="ppSections"></div>
+
+    <section class="pp-others" id="ppOthers">
+      <h2>其他试卷</h2>
+      <div class="pp-others-list">
+        <a class="pp-others-link" href="paper-2025.html">2025 年全国新课标卷 · 交互版</a>
+        <a class="pp-others-link" href="paper-2024.html">2024 年全国新课标卷 · 交互版</a>
+        <a class="pp-others-link" href="paper-2024jia.html">2024 年全国甲卷 · 交互版</a>
+        <a class="pp-others-link" href="paper-2023.html">2023 年全国新课标卷 · 交互版</a>
+        <a class="pp-others-link" href="paper-2023jia.html">2023 年全国甲卷 · 交互版</a>
+        <a class="pp-others-link" href="paper-2023yi.html">2023 年全国乙卷 · 交互版</a>
+        <a class="pp-others-link" href="paper-2021.html">2021 年全国乙卷 · 交互版</a>
+        <a class="pp-others-link" href="papers.html">历年真题（全部试卷）</a>
+      </div>
+    </section>
+  </div>
+</main>
+
+<aside class="pp-drawer" id="ppCardDrawer" hidden>
+  <div class="pp-drawer-head"><h2>答题卡</h2><button type="button" data-close-drawer>✕</button></div>
+  <div class="pp-drawer-body" id="ppCardBody"></div>
+  <div class="pp-drawer-foot"><button type="button" id="ppCardRestart" class="pp-restart">重新开始</button><button type="button" id="ppCardSubmit" class="pp-submit">交卷</button></div>
+</aside>
+
+<aside class="pp-drawer" id="ppAnnoDrawer" hidden>
+  <div class="pp-drawer-head"><h2>我的标注</h2><button type="button" data-close-drawer>✕</button></div>
+  <div class="pp-drawer-body" id="ppAnnoBody"></div>
+</aside>
+
+<div class="pp-modal" id="ppScoreModal" hidden>
+  <div class="pp-modal-box pp-score">
+    <div class="pp-modal-head"><h2>成绩单</h2><button type="button" data-close-modal>✕</button></div>
+    <div class="pp-modal-body" id="ppScoreBody"></div>
+    <div class="pp-modal-foot">
+      <button type="button" id="ppScoreReview">回卷面查看解析</button>
+      <button type="button" id="ppScoreRestart">重新开始</button>
+    </div>
+  </div>
+</div>
+
+<div class="pp-modal" id="ppSopModal" hidden>
+  <div class="pp-modal-box pp-sop">
+    <div class="pp-modal-head"><h2 id="ppSopTitle"></h2><button type="button" data-close-modal>✕</button></div>
+    <div class="pp-modal-body" id="ppSopBody"></div>
+  </div>
+</div>
+
+<div class="pp-anno-toolbar" id="ppAnnoToolbar" hidden>
+  <button type="button" id="ppMarkBtn">标重点</button>
+  <button type="button" id="ppNoteBtn">记笔记</button>
+</div>
+
+<div class="pp-modal" id="ppNoteModal" hidden>
+  <div class="pp-modal-box pp-note">
+    <div class="pp-modal-head"><h2>记笔记</h2><button type="button" data-close-modal>✕</button></div>
+    <div class="pp-modal-body">
+      <p class="pp-note-quote" id="ppNoteQuote"></p>
+      <textarea id="ppNoteText" rows="4" maxlength="500" placeholder="写下你的笔记（最多 500 字）"></textarea>
+    </div>
+    <div class="pp-modal-foot">
+      <button type="button" id="ppNoteSave" class="pp-btn pp-btn--primary">保存</button>
+    </div>
+  </div>
+</div>
+
+<div class="pp-modal" id="ppConfirmModal" hidden>
+  <div class="pp-modal-box">
+    <div class="pp-modal-head"><h2>确认</h2><button type="button" data-close-confirm>✕</button></div>
+    <div class="pp-modal-body"><p id="ppConfirmText"></p></div>
+    <div class="pp-modal-foot">
+      <button type="button" id="ppConfirmNo">取消</button>
+      <button type="button" id="ppConfirmYes" class="pp-btn pp-btn--primary">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="pp-toast" id="ppToast" hidden></div>
+
+<script src="paper-2022jia-data.js?v=1"></script>
+<script src="paper-sop-data.js?v=11"></script>
+<script src="paper-2022jia.js?v=1"></script>
+</body>
+</html>

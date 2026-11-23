@@ -84,7 +84,8 @@ window.CHEM_PAPERS = {
     "lizong"
    ],
    "chem": "化学：选择题约 p2–4，大题约 p9–10，选考约 p14–15",
-   "interactive": false
+   "interactive": true,
+   "interactivePage": "paper-2022jia.html"
   },
   {
    "year": 2022,
@@ -95,7 +96,8 @@ window.CHEM_PAPERS = {
     "lizong"
    ],
    "chem": "化学：选择题约 p2–4，大题约 p10–11，选考约 p15–16",
-   "interactive": false
+   "interactive": true,
+   "interactivePage": "paper-2022yi.html"
   },
   {
    "year": 2021,
@@ -106,7 +108,8 @@ window.CHEM_PAPERS = {
     "lizong"
    ],
    "chem": "化学：选择题约 p2–4，大题约 p9–11，选考约 p15–16",
-   "interactive": false
+   "interactive": true,
+   "interactivePage": "paper-2021jia.html"
   },
   {
    "year": 2021,
