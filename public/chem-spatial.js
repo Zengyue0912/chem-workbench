@@ -203,6 +203,53 @@ function searchForm() {
       <button class="cw-primary" type="submit">搜索</button></div></form>`;
 }
 
+/* 历年真题：10 套交互卷的答题进度键与页面 */
+const paperProgress = [
+  {key:'chem_paper_2025_v1',name:'2025 年全国新课标卷',href:'paper-2025.html'},
+  {key:'chem_paper_2024jia_v1',name:'2024 年全国甲卷',href:'paper-2024jia.html'},
+  {key:'chem_paper_2024_v1',name:'2024 年全国新课标卷',href:'paper-2024.html'},
+  {key:'chem_paper_2023jia_v1',name:'2023 年全国甲卷',href:'paper-2023jia.html'},
+  {key:'chem_paper_2023yi_v1',name:'2023 年全国乙卷',href:'paper-2023yi.html'},
+  {key:'chem_paper_2023_v1',name:'2023 年全国新课标卷',href:'paper-2023.html'},
+  {key:'chem_paper_2022jia_v1',name:'2022 年全国甲卷',href:'paper-2022jia.html'},
+  {key:'chem_paper_2022yi_v1',name:'2022 年全国乙卷',href:'paper-2022yi.html'},
+  {key:'chem_paper_2021jia_v1',name:'2021 年全国甲卷',href:'paper-2021jia.html'},
+  {key:'chem_paper_2021_v1',name:'2021 年全国乙卷',href:'paper-2021.html'}
+];
+
+const latestPapers = [
+  {name:'2025 年全国新课标卷',href:'paper-2025.html',meta:'11 道题 · 30 个计分项 · 满分 100'},
+  {name:'2024 年全国新课标卷',href:'paper-2024.html',meta:'11 道题 · 29 个计分项 · 满分 100'},
+  {name:'2024 年全国甲卷',href:'paper-2024jia.html',meta:'12 道题 · 39 个计分项 · 满分 100'}
+];
+
+/* 最近有未完成进度的一套卷子；没有进度时返回 null */
+function latestPaperProgress() {
+  let best = null;
+  for (const paper of paperProgress) {
+    let state = null;
+    try { state = JSON.parse(localStorage.getItem(paper.key)); } catch { state = null; }
+    if (!state || state.submitted) continue;
+    const ids = new Set([...Object.keys(state.answers || {}),...Object.keys(state.inputs || {}),...Object.keys(state.rates || {})]);
+    let done = 0;
+    for (const id of ids) {
+      const answer = (state.answers || {})[id];
+      if (answer != null && (!Array.isArray(answer) || answer.length > 0)) done++;
+      else if ((state.inputs || {})[id] || (state.rates || {})[id]) done++;
+    }
+    if (!done) continue;
+    const updated = state.timer?.updatedAt || 0;
+    if (!best || updated > best.updated) best = {...paper,done,updated};
+  }
+  return best;
+}
+
+function paperCard(paper) {
+  return `<a class="cw-card" href="${paper.href}" style="text-decoration:none">
+    <span class="cw-card-copy"><strong>${paper.name}</strong><small>${paper.meta}</small>
+      <span class="cw-link">开始做题 <span aria-hidden="true">→</span></span></span></a>`;
+}
+
 function updateClassCard() {
   const card = $('cwClassCard');
   if (!card) return;
@@ -246,6 +293,7 @@ function home(root) {
   teacherLink.textContent = '进入教师后台 ↗';
   masthead.append(teacherLink);
   search = '';
+  const resume = latestPaperProgress();
   shell.insertAdjacentHTML('beforeend',`<div class="cw-discover cw-home">
     <header class="cw-hero cw-lab-hero">
       <div class="cw-hero-copy"><h1>高中化学<br>3D 考点工作台</h1>
@@ -271,6 +319,11 @@ function home(root) {
       ${button('查解题步骤','data-cw-action="library"')}</div>
       <div class="cw-grid">${topics.map(lessonCard).join('')}</div></section>
     <section aria-label="虚拟实验室"><div class="cw-head-row"><h2>虚拟实验室</h2><div class="cw-actions">${button('3D 化学课本目录','data-cw-action="book"',true)}${button('翻开《电解水》','data-cw-lesson="water"')}${button('进入自由实验台','data-cw-action="free-lab"')}</div></div><div class="cw-grid">${Object.keys(items).map(resourceCard).join('')}</div></section>
+    <section aria-label="历年真题"><div class="cw-head-row"><h2>历年真题</h2><div class="cw-actions">${button('查看全部试卷 →','data-cw-action="papers"',true)}</div></div>
+    <p class="cw-quiet">近十年全国卷高考化学真题，在线作答、即时自测、逐选项解析。</p>
+    <p class="cw-quiet">共 25 套 · 24 套有 PDF · 10 套交互版</p>
+    <div class="cw-grid">${latestPapers.map(paperCard).join('')}</div>
+    ${resume ? `<div class="cw-actions"><a class="cw-secondary" href="${resume.href}" style="text-decoration:none">继续做题：${resume.name}（已答 ${resume.done} 题） →</a></div>` : ''}</section>
     <div class="cw-home-links">
       ${button('高考真题空间实战','data-exam-model="styrene"')}
       <a class="cw-secondary" href="papers.html" style="text-decoration:none">做一整套真题</a>
@@ -621,6 +674,7 @@ document.addEventListener('click',event=>{
   if (cwSop) return window.ChemStudentStudy.openLibrary(cwSop);
   if (cwAction === 'home') return window.showHome();
   if (cwAction === 'book') return navigateBook(bookHref());
+  if (cwAction === 'papers') { location.href = 'papers.html'; return; }
   if (cwAction === 'free-lab') return openFreeLab();
   if (cwAction === 'paste') return window.ChemStudentStudy.openOwnQuestion();
   if (cwAction === 'titrate') {
@@ -649,6 +703,11 @@ function sidebar() {
       '<div class="nav-group"><button type="button" class="nav-cat new-nav" data-cw-action="center"><span class="ni" aria-hidden="true">◈</span><span>找考点</span></button></div>' +
       '<div class="nav-group"><button type="button" class="nav-cat new-nav" data-cw-action="book"><span class="ni" aria-hidden="true">▤</span><span>3D 化学课本</span></button></div>' +
       '<div class="nav-group"><button type="button" class="nav-cat new-nav" data-cw-kind="exp"><span class="ni" aria-hidden="true">◫</span><span>虚拟实验室</span></button></div>');
+  }
+  if (!tree.querySelector('[data-cw-action="papers"]')) {
+    const icon = typeof window.UIsvg === 'function' ? window.UIsvg('paper','ni') : '<span class="ni" aria-hidden="true">▦</span>';
+    tree.insertAdjacentHTML('beforeend',
+      '<div class="nav-group"><button type="button" class="nav-cat new-nav" data-cw-action="papers">' + icon + '<span>历年真题 <span class="cnt">10</span></span></button></div>');
   }
   for (const category of ['exps','apps','subs']) {
     const group = tree.querySelector('[data-mod="' + category + '"]')?.closest('.nav-group');
