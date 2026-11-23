@@ -273,7 +273,7 @@ function home(root) {
     <section aria-label="虚拟实验室"><div class="cw-head-row"><h2>虚拟实验室</h2><div class="cw-actions">${button('3D 化学课本目录','data-cw-action="book"',true)}${button('翻开《电解水》','data-cw-lesson="water"')}${button('进入自由实验台','data-cw-action="free-lab"')}</div></div><div class="cw-grid">${Object.keys(items).map(resourceCard).join('')}</div></section>
     <div class="cw-home-links">
       ${button('高考真题空间实战','data-exam-model="styrene"')}
-      <a class="cw-secondary" href="paper-2021.html" style="text-decoration:none">做一整套真题</a>
+      <a class="cw-secondary" href="papers.html" style="text-decoration:none">做一整套真题</a>
       ${button('同步练习','data-lab="practice"')}
       ${button('化学小游戏','data-lab="games"')}
       ${button('错题本','data-teach="mistakes"')}
