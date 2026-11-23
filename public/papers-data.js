@@ -24,7 +24,8 @@ window.CHEM_PAPERS = {
     "chem"
    ],
    "chem": "",
-   "interactive": false
+   "interactive": true,
+   "interactivePage": "paper-2024jia.html"
   },
   {
    "year": 2024,
@@ -47,7 +48,8 @@ window.CHEM_PAPERS = {
     "lizong"
    ],
    "chem": "化学：选择题约 p2–4，大题约 p9–11，选考约 p15–16",
-   "interactive": false
+   "interactive": true,
+   "interactivePage": "paper-2023jia.html"
   },
   {
    "year": 2023,
@@ -58,7 +60,8 @@ window.CHEM_PAPERS = {
     "lizong"
    ],
    "chem": "化学：选择题约 p3–4，大题约 p10–11，选考约 p16",
-   "interactive": false
+   "interactive": true,
+   "interactivePage": "paper-2023yi.html"
   },
   {
    "year": 2023,
@@ -69,7 +72,8 @@ window.CHEM_PAPERS = {
     "chem"
    ],
    "chem": "",
-   "interactive": false
+   "interactive": true,
+   "interactivePage": "paper-2023.html"
   },
   {
    "year": 2022,
