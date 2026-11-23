@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>历年真题 · 近十年全国卷高考化学真题</title>
+<link rel="stylesheet" href="papers.css?v=1">
+</head>
+<body>
+<header class="hub-topbar">
+  <div class="hub-topbar-inner">
+    <a class="hub-back" href="index.html">← 回工作台</a>
+    <h1>历年真题</h1>
+  </div>
+</header>
+
+<main class="hub-main">
+  <div class="hub-head">
+    <h2>历年真题</h2>
+    <p class="hub-sub">近十年全国卷高考化学真题（2016–2025）</p>
+    <p class="hub-stats" id="hubStats"></p>
+  </div>
+
+  <section class="hub-hero" aria-label="2021 年全国乙卷交互版">
+    <span class="hub-hero-badge">交互版 · 可在线作答、即时自测、判分</span>
+    <h3>2021 年全国乙卷</h3>
+    <p>完整交互试卷：90 分钟计时、答题卡、选择题即时自测、逐选项解析、错题挂 SOP。先做一整套，摸清自己的真实水平。</p>
+    <div class="hub-hero-actions">
+      <a class="hub-hero-btn" href="paper-2021.html">开始做题</a>
+      <span>另有<a class="hub-hero-pdf" href="papers/2021-quanguo-yi.pdf" target="_blank" rel="noopener">原卷 PDF ↗</a></span>
+    </div>
+  </section>
+
+  <div id="hubYears"></div>
+
+  <footer class="hub-foot">
+    <p>理综卷含物理、化学、生物三科，化学为其中一部分，卡片上标明了化学题所在页码。</p>
+    <p>扫描版为图片版 PDF，清晰度有限，建议放大查看。</p>
+  </footer>
+</main>
+
+<script src="papers-data.js?v=1"></script>
+<script>
+(function () {
+  var D = window.CHEM_PAPERS;
+  var LABELS = {lizong: '理综卷', chem: '化学摘录版', scan: '扫描版', interactive: '交互版'};
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c];
+    });
+  }
+  var years = [];
+  D.papers.forEach(function (p) { if (years.indexOf(p.year) === -1) years.push(p.year); });
+  years.sort(function (a, b) { return b - a; });
+  var h = '';
+  years.forEach(function (y) {
+    h += '<section class="hub-year"><h2>' + y + ' 年</h2><div class="hub-grid">';
+    D.papers.filter(function (p) { return p.year === y; }).forEach(function (p) {
+      if (p.missing) {
+        h += '<article class="hub-card hub-card--missing"><h3>' + esc(p.name) + '</h3>' +
+          '<div class="hub-badges"><span class="hub-badge hub-badge--missing">暂缺</span></div>' +
+          '<p class="hub-note">原卷正在寻找中。</p></article>';
+        return;
+      }
+      h += '<article class="hub-card"><h3>' + esc(p.name) + '</h3>' +
+        '<div class="hub-badges">' + p.badges.map(function (b) {
+          return '<span class="hub-badge hub-badge--' + b + '">' + LABELS[b] + '</span>';
+        }).join('') + '</div>' +
+        '<p class="hub-meta">' + p.pages + ' 页</p>' +
+        (p.chem ? '<p class="hub-chem">' + esc(p.chem) + '</p>' : '') +
+        '<div class="hub-actions">';
+      if (p.interactive) {
+        h += '<a class="hub-btn hub-btn--primary" href="' + esc(p.interactivePage || 'paper-2021.html') + '">开始做题</a>' +
+          '<a class="hub-btn" href="papers/' + esc(p.file) + '" target="_blank" rel="noopener">原卷 PDF ↗</a>';
+      } else {
+        h += '<a class="hub-btn hub-btn--primary" href="papers/' + esc(p.file) + '" target="_blank" rel="noopener">查看 PDF ↗</a>';
+      }
+      h += '</div></article>';
+    });
+    h += '</div></section>';
+  });
+  document.getElementById('hubYears').innerHTML = h;
+  var total = D.papers.length;
+  var pdfs = D.papers.filter(function (p) { return p.file; }).length;
+  var inter = D.papers.filter(function (p) { return p.interactive; }).length;
+  document.getElementById('hubStats').innerHTML =
+    '共 <b>' + total + '</b> 套 · <b>' + pdfs + '</b> 套有 PDF · <b>' + inter + '</b> 套交互版';
+})();
+</script>
+</body>
+</html>
